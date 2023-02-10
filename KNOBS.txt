@@ -1,0 +1,163 @@
+D-Lev Knobs
+
+knob     hex      label    range    page title
+0        00       Mon      0:63     D-LEV
+1        01       Out      0:1      
+2        02       Vcal     -127:127 
+3        03       Pcal     -127:127 
+4        04       stor     0:120    
+5        05       bank     -3:3     
+6        06       load     -120:120 
+7        07       -        0:19     
+8        08       Mon      0:63     LEVELS
+9        09       Line     0:63     
+10       0A       prev     0:63     
+11       0B       Treb     -31:31   
+12       0C       osc      0:63     
+13       0D       Bass     -31:31   
+14       0E       nois     0:63     
+15       0F       -        0:19     
+16       10       vmod     -63:63   PREVIEW
+17       11       pmod     -63:63   
+18       12       prev     0:63     
+19       13       treb     -31:31   
+20       14       harm     -31:31   
+21       15       bass     -31:31   
+22       16       oct      -7:7     
+23       17       -        0:19     
+24       18       vloc     0:63     MIDI
+25       19       velo     0:31     
+26       1A       cloc     0:63     
+27       1B       cc       -127:31  
+28       1C       bend     0:127    
+29       1D       chan     -16:16   
+30       1E       oct      -7:7     
+31       1F       -        0:19     
+32       20       kloc     0:63     VOLUME
+33       21       rise     0:63     
+34       22       knee     0:31     
+35       23       fall     0:63     
+36       24       velo     0:31     
+37       25       damp     0:63     
+38       26       dloc     0:63     
+39       27       -        0:19     
+40       28       vmod     -31:31   PITCH
+41       29       corr     0:31     
+42       2A       rate     0:31     
+43       2B       span     0:31     
+44       2C       cntr     0:31     
+45       2D       prvw     -12:11   
+46       2E       Post     0:3      
+47       2F       -        0:19     
+48       30       vmod     -63:63   NOISE
+49       31       pmod     -63:63   
+50       32       nois     0:63     
+51       33       treb     -31:31   
+52       34       puls     0:31     
+53       35       bass     -31:31   
+54       36       duty     0:31     
+55       37       -        0:19     
+56       38       vmod     -63:63   FLT_NOISE
+57       39       pmod     -63:63   
+58       3A       freq     0:192    
+59       3B       nois     0:63     
+60       3C       mode     -4:4     
+61       3D       xmix     0:31     
+62       3E       reso     0:63     
+63       3F       0        0:19     
+64       40       vmod     -63:63   0_OSC
+65       41       pmod     -63:63   
+66       42       harm     0:31     
+67       43       treb     -31:31   
+68       44       odd      0:31     
+69       45       bass     -31:31   
+70       46       oct      -7:7     
+71       47       -        0:19     
+72       48       offs     -127:127 1_OSC
+73       49       offs     -127:127 
+74       4A       hmul     -127:127 
+75       4B       hmul     -127:127 
+76       4C       fm       0:31     
+77       4D       sprd     0:63     
+78       4E       xmix     0:31     
+79       4F       -        0:19     
+80       50       vmod     -63:63   FLT_OSC
+81       51       pmod     -63:63   
+82       52       freq     0:192    
+83       53       osc      0:63     
+84       54       mode     -4:4     
+85       55       xmix     0:31     
+86       56       reso     0:63     
+87       57       -        0:19     
+88       58       freq     0:127    RESON
+89       59       tap      -63:63   
+90       5A       hpf      0:192    
+91       5B       harm     -63:63   
+92       5C       mode     -2:2     
+93       5D       xmix     -31:31   
+94       5E       reso     -63:63   
+95       5F       -        0:19     
+96       60       vmod     -63:63   0_FORM
+97       61       pmod     -63:63   
+98       62       freq     0:192    
+99       63       levl     0:63     
+100      64       freq     0:192    
+101      65       levl     0:63     
+102      66       reso     0:63     
+103      67       -        0:19     
+104      68       vmod     -63:63   1_FORM
+105      69       pmod     -63:63   
+106      6A       freq     0:192    
+107      6B       levl     0:63     
+108      6C       freq     0:192    
+109      6D       levl     0:63     
+110      6E       reso     0:63     
+111      6F       -        0:19     
+112      70       vmod     -63:63   2_FORM
+113      71       pmod     -63:63   
+114      72       freq     0:192    
+115      73       levl     0:63     
+116      74       freq     0:192    
+117      75       levl     0:63     
+118      76       reso     0:63     
+119      77       -        0:19     
+120      78       vmod     -63:63   3_FORM
+121      79       pmod     -63:63   
+122      7A       freq     0:192    
+123      7B       levl     0:63     
+124      7C       freq     0:192    
+125      7D       levl     0:63     
+126      7E       reso     0:63     
+127      7F       -        0:19     
+128      80       Vcal     -127:127 V_FIELD
+129      81       Drop     0:31     
+130      82       Lin      -15:15   
+131      83       Dith     0:7      
+132      84       Ofs-     0:127    
+133      85       Ofs+     0:127    
+134      86       Sens     -127:127 
+135      87       -        0:19     
+136      88       Pcal     -127:127 P_FIELD
+137      89       Lift     0:31     
+138      8A       Lin      -15:15   
+139      8B       Dith     0:7      
+140      8C       Ofs-     0:127    
+141      8D       Ofs+     0:127    
+142      8E       Sens     -127:127 
+143      8F       -        0:19     
+144      90       LED      0:31     DISPLAY
+145      91       Cent     -99:99   
+146      92       LCD      0:31     
+147      93       Note     -11:11   
+148      94       Qant     0:4      
+149      95       Oct      -15:15   
+150      96       Post     0:3      
+151      97       -        0:19     
+152      98       Wait     0:120    SYSTEM
+153      99       Auto     0:120    
+154      9A       P<>V     0:3      
+155      9B       50Hz     0:1      
+156      9C       Stor     0:7      
+157      9D       Erev     0:1      
+158      9E       Load     -7:7     
+159      9F       -        0:19

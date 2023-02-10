@@ -1,0 +1,65 @@
+HCL (Hive Command Line)
+
+================================
+= SERIAL PORT & TERMINAL SETUP =
+================================
+- Baud rate: 230400
+- Data: 8 bit
+- Parity: none
+- Stop bits: 1
+- Flow control: none
+- Local echo: none
+- New-line RX: AUTO
+- New-line TX: CR
+
+===========
+= GENERAL =
+===========
+- The general format is variables (if any) first, terminated by the command, ending in a SPACE.  
+- ENTER/RETURN is not recognized!
+- Ready indicator is '>' on a new line.
+- Bad / unknown command indicator is '?' on a new line.
+- All input is echoed back.
+- All returned data is 32 bit radix hex.
+- Data writes perform a read after the write.
+- The address is returned in brackets, followed by the data: [addr]data.
+- Default input data / address radix is decimal, prefix with "0x" for hex.
+
+============
+= COMMANDS =
+============
+READ: Register (rx = rr) | Memory (rx = rm) | SPI (rx = rs) | Knob (rx = rk):
+- <start_addr> <end_addr> rx: read data from start_addr to end_addr.
+- <addr> rx: read data at addr.
+- rx: reread data from previously given addr(s).
+WRITE: Register (wx = wr) | Memory (wx = wm, wb) | SPI (wx = ws) | Knob (wx = wk):
+- <addr> <data> wx: write data to addr.
+- <data> wx: write data to previously given addr.
+- wx: rewrite previously given data to previous given addr.
+- Note: wm = write 32 bits; wb = write 8 bits (byte).
+MISC:
+- crc: calculate CRC32 over SW load in SPI EEPROM (includes appended crc; s/b 0xdebb20e3 for good load).
+- ver: read CRC32 value of SW load in SPI EEPROM (should return the value of the *.spi / *.ttl file name.)
+- acal: perform an auto calibration (immediate, no Wait timer).
+=> (See KNOBS.txt for details)
+
+==================
+= HIVE REGISTERS =
+==================
+0x0 - vect
+0x1 - time
+0x2 - error
+0x3 - io
+0x4 - uart_tx
+0x5 - uart_rx
+0x6 - spi
+0x7 - 
+0x8 - spdif
+0x9 - midi
+0xA - pitch
+0xB - volume
+0xC - tuner
+0xD - lcd
+0xE - enc
+0xF - 
+=> (See REGS.txt for details)

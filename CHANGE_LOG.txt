@@ -1,0 +1,94 @@
+//////////
+// TODO //
+//////////
+- More bounds checking?
+
+///////////
+// BUILD //
+///////////
+- Linux:   GOOS=linux GOARCH=amd64 go build -o d-lin
+- Windows: GOOS=windows GOARCH=amd64 go build -o d-win.exe
+- Mac:     GOOS=darwin GOARCH=amd64 go build -o d-mac
+- Mac M1:  GOOS=darwin GOARCH=arm64 go build -o d-mm1
+
+////////////////
+// CHANGE LOG //
+////////////////
+2022-09-24 : v2
+- Commented lines in bank files now skipped over with btos.
+
+2022-09-17 : v1
+- Moved help Notes from short to verbose help string.
+
+2022-09-16 : v1
+- Port number is non-volatile in config file "d-lev.cfg".
+- Added stob command.
+- Removed -port flag from all commands.
+- Flag renaming: -flag, -slot, -knobs => -f, -s, -k
+- Removed flags from slots, hcl commands.
+- Command renaming: bank => btos.
+
+2022-09-15b : v1
+- Implemented config file system to hold port number.
+
+2022-09-15 : v1
+- Fixed ints_to_hexs() (wasn't dealing with negative values correctly).
+- Command renaming: btos => bank.
+- Help file dinking around.
+
+2022-09-14 : v1
+- Added ktof & ftok commands.
+- Replaced -mode (string) flag with -pre, -pro, -spi, -eeprom (bools).
+- Moved view -slots to top level slots command.
+
+2022-09-13 : v1
+- Combined knobs, fview, sview, slots commands & flags.
+- Added check for blank file name, removed defaults.
+- Added profile support to dlp_upd().
+
+2022-09-12 : v1
+- Working on testing.
+
+2022-09-11 : v1
+- Commands renaming: slots, slot, file => match, sview, fview.
+- All EEPROM writes now confined to their mode sections:
+- e.g. "pump -mode pre" won't overwrite profiles.
+- e.g. "btos -mode pre" can't overwrite profiles or to any other section.
+- Dinking around with output text & format.
+- Updated help txt & manual.
+
+2022-09-10 : v1
+- Commands renaming: kview, sview, fview => knobs, slot, file.
+- File renaming: d-lev* => d-lib*
+- Some tidying up.
+
+2022-09-09 : v1
+- Added btos & dlp_upd commands.
+- Help info now raw strings pulled in at compile.
+- Help file ~done.
+
+2022-09-08 : v1
+- Added slots command.
+- Commands renaming: show* => *view.
+
+2022-09-07 : v1
+- Added showk, shows, showf commands.
+
+2022-09-06 : v1
+- Source code now in multiple files.
+- Main code reorg.
+
+2022-09-05 : v1
+- Added ftos, pump, hcl, and help commands.
+- Use hcl for ver, crc, acal, and quoted multi word HCL commands.
+- Alert & ask @ file overwrite.
+- Added version.
+- Flags now verbose for clarity.
+
+2022-09-04
+- File extension check, abort if wrong, add if missing.
+- Use of subcommand -mode rather than a bunch of flags.
+- More feedback re. what's going on.
+
+2022-09-03
+- Golang version born.
