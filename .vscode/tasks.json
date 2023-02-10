@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "type": "shell",
+    "command": "go",
+    "cwd": "${workspaceFolder}",
+    "tasks": [
+        {
+            "command": "go",
+            "label": "install",
+            "args": [
+                "install",
+                "-v",
+                "./..."
+            ],
+            "group": "build"
+        },
+        {
+            "command": "go",
+            "label": "run",
+            "args": [
+                "run",
+                "${workspaceFolder}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "buildall",
+            "command": "./build_all.sh",
+            "group": "build"
+        }
+    ],
+}

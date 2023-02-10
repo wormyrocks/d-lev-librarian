@@ -1,0 +1,4 @@
+{
+    // https://stackoverflow.com/questions/44303316/vscode-defining-own-variables-in-tasks-json
+    "gopls": { "ui.semanticTokens": true },
+}

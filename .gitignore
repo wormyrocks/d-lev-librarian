@@ -21,8 +21,4 @@
 go.work
 
 # Binaries (include in releases instead)
-d-lin
-d-mac
-d-mm1
-d-win.exe
-d-lib
+bin/
