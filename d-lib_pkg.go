@@ -10,41 +10,44 @@ import (
 )
 
 const (
-	VERSION = "2"							// librarian version
+	VERSION = "5"										// librarian version
 	//
-	EE_RW_BYTES = 4							// eeprom bytes per read / write cycle
-	EE_PG_BYTES = 0x100						// eeprom bytes per page
-	EE_SPI_ADDR = 0x10000					// eeprom code start addr
-	EE_SPI_SZ = 0x4000						// eeprom code size : 16kB code space
-	EE_SPI_END = EE_SPI_ADDR + EE_SPI_SZ	// eeprom code end addr
-	EE_PRE_ADDR = 0x0						// eeprom presets start addr
-	EE_PRE_SZ = 0x10000						// eeprom presets size : [-120:120] & profile[-7:7] space
-	EE_PRE_END = EE_PRE_ADDR + EE_PRE_SZ	// eeprom presets end addr
-	EE_PRO_ADDR = 0x7900					// eeprom profiles start addr
-	EE_PRO_SZ = 0xF00						// eeprom profiles size : [-7:7] space
-	EE_PRO_END = EE_PRO_ADDR + EE_PRO_SZ	// eeprom profiles end addr
-	EE_START = EE_PRE_ADDR					// eeprom start addr
-	EE_END = EE_SPI_END						// eeprom end addr
-	EE_WR_MS = 6							// eeprom write wait time (ms)
+	SLOTS = 256											// pre + pro slots
+	SLOT_BYTES = 256									// bytes per slot
+
+	PRO_SLOTS = 6										// profile[0:5]
+	PRE_SLOTS = SLOTS - PRO_SLOTS						// preset[0:249]
 	//
-	UI_PAGES = 20							// ui pages
-	UI_COLS = 2								// ui page columns
-	UI_ROWS = 4								// ui page rows
-	UI_KNOBS = UI_COLS * UI_ROWS			// ui knobs
-	UI_PAGE_KNOB = 7						// ui page selector knob
-	UI_PRN_PG_COLS = 4						// ui print pages columns
-	UI_PRN_PG_ROWS = 5						// ui print pages rows
-	KNOBS = UI_KNOBS * UI_PAGES				// total knobs
+	EE_RW_BYTES = 4										// eeprom bytes per read / write cycle
+	EE_PG_BYTES = 256									// eeprom bytes per page
 	//
-	PRE_SLOT_MAX = 120						// highest preset slot
-	PRO_SLOT_MAX = 7						// highest profile slot
-	SLOTS = 256								// pre + pro slots
-	SLOT_BYTES = 256						// bytes per slot
+	EE_PRE_ADDR = 0x0									// eeprom pre start addr
+	EE_PRE_END = EE_PRE_ADDR + (PRE_SLOTS * SLOT_BYTES)	// eeprom pre end addr
 	//
-	RX_BUF_BYTES = 512						// serial port rx buffer size
-	CHARS_PER_DOT = 4096					// chars for each activity dot printed
-	CFG_FILE = "d-lib.cfg"					// config file name
-	CFG_PORT = 0							// default port
+	EE_PRO_ADDR = EE_PRE_END							// eeprom pro start addr
+	EE_PRO_END = EE_PRO_ADDR + (PRO_SLOTS * SLOT_BYTES)	// eeprom pro end addr
+	//
+	EE_SPI_ADDR = EE_PRO_END							// eeprom code start addr
+	EE_SPI_SZ = 0x4000									// eeprom code size : 16kB code space
+	EE_SPI_END = EE_SPI_ADDR + EE_SPI_SZ				// eeprom code end addr
+	//
+	EE_START = EE_PRE_ADDR								// eeprom start addr
+	EE_END = EE_SPI_END									// eeprom end addr
+	EE_WR_MS = 6										// eeprom write wait time (ms)
+	//
+	UI_PAGES = 20										// ui pages
+	UI_COLS = 2											// ui page columns
+	UI_ROWS = 4											// ui page rows
+	UI_KNOBS = UI_COLS * UI_ROWS						// ui knobs
+	UI_PAGE_KNOB = 7									// ui page selector knob
+	UI_PRN_PG_COLS = 4									// ui print pages columns
+	UI_PRN_PG_ROWS = 5									// ui print pages rows
+	KNOBS = UI_KNOBS * UI_PAGES							// total knobs
+	//
+	RX_BUF_BYTES = 512									// serial port rx buffer size
+	CHARS_PER_DOT = 4096								// chars for each activity dot printed
+	CFG_FILE = "d-lib.cfg"								// config file name
+	CFG_PORT = 0										// default port
 )
 
 // convert string of multi-byte hex values to slice of ints

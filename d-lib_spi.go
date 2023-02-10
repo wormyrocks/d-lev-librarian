@@ -24,10 +24,10 @@ func dots(chars int) (int) {
 
 // read SPI port to string, trim cruft, optionally show activity
 func spi_rd(sp serial.Port, addr int, addr_end int, act_f bool) (string) {
-	// tx SPI read command, rx result
 	rd_buf := sp_wr_rd(sp, strconv.Itoa(addr) + " " + strconv.Itoa(addr_end) + " rs ", act_f)
-	// trim cruft
-	return decruft_hcl(string(rd_buf))
+	rd_str := decruft_hcl(string(rd_buf))
+	if len(strings.Split(rd_str, "\n")) != 1 + (addr_end - addr) / 4 { log.Fatalln("> Bad SPI read!") }
+	return rd_str
 }
 
 // SPI write enable
@@ -52,27 +52,22 @@ func spi_wr_prot(sp serial.Port, prot_f bool) {
 }
 
 // write string to SPI port, optionally show activity
-// confine writes to mode sections
 func spi_wr(sp serial.Port, addr int, wr_str string, mode string, act_f bool) {
 	spi_wr_prot(sp, false)
 	split_strs := (strings.Split(strings.TrimSpace(wr_str), "\n"))
 	var chars int
 	for _, line_str := range split_strs {
 		var cmd string
-		if spi_addr_chk(addr, mode) {  // do write
-			line_str := strings.TrimSpace(line_str)
-			if addr % EE_PG_BYTES == 0 {  // page boundary
-				spi_wr_wait(sp)
-				spi_wr_en(sp)
-				cmd = strconv.Itoa(addr) + " "
-			}
-			if line_str != "0" { cmd += "0x" }  // no 0x for zero data
-			cmd += line_str + " ws "
-			sp_wr_rd(sp, cmd, false)
-			chars += len(cmd)
-		} else {  // don't write
-			chars += 20
+		line_str := strings.TrimSpace(line_str)
+		if addr % EE_PG_BYTES == 0 {  // page boundary
+			spi_wr_wait(sp)
+			spi_wr_en(sp)
+			cmd = strconv.Itoa(addr) + " "
 		}
+		if line_str != "0" { cmd += "0x" }  // no 0x for zero data
+		cmd += line_str + " ws "
+		sp_wr_rd(sp, cmd, false)
+		chars += len(cmd)
 		addr += EE_RW_BYTES;
 		if act_f { chars = dots(chars) }
 	}
@@ -103,27 +98,14 @@ func spi_bulk_addrs(mode string) (addr int, end int) {
 	return
 }
 
-// confine writes to mode sections
-func spi_addr_chk(addr int, mode string) (bool) {
-	mode_addr, mode_end := spi_bulk_addrs(mode)
-	mode_f := addr >= mode_addr && addr < mode_end
-	if mode == "pre" {  // pro hole in pre section
-		pro_addr, pro_end := spi_bulk_addrs("pro")
-		pro_f := addr >= pro_addr && addr < pro_end
-		mode_f = mode_f && !pro_f
-	}
-	return mode_f
-}
-
 // return spi slot addr
 func spi_slot_addr(slot int, mode string) (int) {
 	switch mode {
 		case "pre" :
-			if slot < -PRE_SLOT_MAX || slot > PRE_SLOT_MAX { log.Fatalln("- Slot out of range:", slot) }
-			if slot < 0 { slot += SLOTS }
+			if slot < 0 || slot >= PRE_SLOTS { log.Fatalln("- Slot out of range:", slot) }
 		case "pro" :
-			if slot < -PRO_SLOT_MAX || slot > PRO_SLOT_MAX { log.Fatalln("- Slot out of range:", slot) }
-			slot += SLOTS / 2
+			if slot < 0 || slot >= PRO_SLOTS { log.Fatalln("- Slot out of range:", slot) }
+			slot += PRE_SLOTS
 		default :
 			log.Fatalln("> Unknown mode:", mode)
 	}
@@ -139,6 +121,24 @@ func decruft_hcl(str_i string) (string) {
 		idx := strings.Index(line_str, "]")
 		if idx >= 0 { str_all += line_str[idx+1:] + "\n" }
 	}
-	return str_all
+	return strings.TrimSpace(str_all)
 }
 
+// get single slot data
+func get_slot(port int, slot int, mode string) (string) {
+	addr := spi_slot_addr(slot, mode)
+	sp := sp_open(port)
+	rx_str := spi_rd(sp, addr, addr + EE_PG_BYTES - 1, false)
+	sp.Close()
+	return rx_str
+}
+
+// get all slots data
+func get_slots(port int) (string) {
+	addr, _ := spi_bulk_addrs("pre")
+	_, end := spi_bulk_addrs("pro")
+	sp := sp_open(port)
+	rx_str := spi_rd(sp, addr, end - 1, true)
+	sp.Close()
+	return rx_str
+}

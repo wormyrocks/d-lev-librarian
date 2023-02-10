@@ -1,7 +1,6 @@
 //////////
 // TODO //
 //////////
-- More bounds checking?
 
 ///////////
 // BUILD //
@@ -14,6 +13,54 @@
 ////////////////
 // CHANGE LOG //
 ////////////////
+2023-01-01 : v5
+- Command update: pitch correction & stereo normalizations.
+
+2022-12-30 : v5
+- Command update: NOISE:vmod and RESON:mode changes.
+
+2022-12-28 : v5
+- Command diff: now compares a file to knobs / slot / file.
+
+2022-12-27 : v5
+- Command update: convert all presets to latest arch (undocumented).
+- Command diff: only displays screens with differences.
+
+2022-12-24 : v5
+- New "diff" command to compare two preset files.
+- View command now shows blank pre knob values for pro, & vice versa.
+
+2022-12-23 : v5
+- Commands stob, pump, dump, split: -f <file> flag added for consistency.
+- Command ports: -p <port> flag added for safety / clarity.
+- Command slots: -d <directory> flag added for clarity.
+- Command stob: -hdr flag to enable file header comments.
+- Sprinkled around blank file name checks for safety.
+- More array bounds checking to hopefully prevent panics.
+- All -s <slot> values now strings to defeat default behavior.
+- Port setting logic more robust.
+
+2022-12-19 : v5
+- Bank file header comments every 10 slots.
+
+2022-12-17 : v5
+- Changes to reflect [0:249] presets & [0:5] profiles.
+- New "reset" command to reset the D-Lev processor.
+- New "split" command to parse container files to their sub-components.
+- Commands split, pump, dump use the file extension to know what to do.
+- Command stob -f flag removed (redundant).
+
+2022-12-14 : v4
+- Added reset command, issued automatically after spi | eeprom pump.
+- Changes to reflect type shuffling & changes.
+- Changes to reflect [-124:124] presets & [-3:3] profiles.
+- New type 0x7d for SYSTEM:Wait[0:120] => [0:99]. 
+- Fixed bug in stob: negative presets weren't listed correctly.
+- Package slot & address constants are more parametric.
+
+2022-12-04 : v3
+- Removed subcommand "view" slot default 0 (was confusing).
+
 2022-09-24 : v2
 - Commented lines in bank files now skipped over with btos.
 

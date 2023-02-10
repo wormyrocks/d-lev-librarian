@@ -5,9 +5,9 @@ knob     hex      label    range    page title
 1        01       Out      0:1      
 2        02       Vcal     -127:127 
 3        03       Pcal     -127:127 
-4        04       stor     0:120    
+4        04       stor     0:249    
 5        05       bank     -3:3     
-6        06       load     -120:120 
+6        06       load     0:249
 7        07       -        0:19     
 8        08       Mon      0:63     LEVELS
 9        09       Line     0:63     
@@ -100,33 +100,33 @@ knob     hex      label    range    page title
 96       60       vmod     -63:63   0_FORM
 97       61       pmod     -63:63   
 98       62       freq     0:192    
-99       63       levl     0:63     
+99       63       levl     -63:63     
 100      64       freq     0:192    
-101      65       levl     0:63     
+101      65       levl     -63:63     
 102      66       reso     0:63     
 103      67       -        0:19     
 104      68       vmod     -63:63   1_FORM
 105      69       pmod     -63:63   
 106      6A       freq     0:192    
-107      6B       levl     0:63     
+107      6B       levl     -63:63     
 108      6C       freq     0:192    
-109      6D       levl     0:63     
+109      6D       levl     -63:63     
 110      6E       reso     0:63     
 111      6F       -        0:19     
 112      70       vmod     -63:63   2_FORM
 113      71       pmod     -63:63   
 114      72       freq     0:192    
-115      73       levl     0:63     
+115      73       levl     -63:63     
 116      74       freq     0:192    
-117      75       levl     0:63     
+117      75       levl     -63:63     
 118      76       reso     0:63     
 119      77       -        0:19     
 120      78       vmod     -63:63   3_FORM
 121      79       pmod     -63:63   
 122      7A       freq     0:192    
-123      7B       levl     0:63     
+123      7B       levl     -63:63     
 124      7C       freq     0:192    
-125      7D       levl     0:63     
+125      7D       levl     -63:63     
 126      7E       reso     0:63     
 127      7F       -        0:19     
 128      80       Vcal     -127:127 V_FIELD
@@ -153,11 +153,11 @@ knob     hex      label    range    page title
 149      95       Oct      -15:15   
 150      96       Post     0:3      
 151      97       -        0:19     
-152      98       Wait     0:120    SYSTEM
-153      99       Auto     0:120    
+152      98       Wait     0:99     SYSTEM
+153      99       Auto     0:249    
 154      9A       P<>V     0:3      
 155      9B       50Hz     0:1      
-156      9C       Stor     0:7      
+156      9C       Stor     0:5      
 157      9D       Erev     0:1      
-158      9E       Load     -7:7     
+158      9E       Load     0:5
 159      9F       -        0:19

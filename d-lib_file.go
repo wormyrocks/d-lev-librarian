@@ -14,11 +14,15 @@ import (
 	"strconv"
 )
 
-// check for blank file name, ext, add if ext missing
-func file_ext_chk(file string, ext string) (string) {
-	if file == "" { 
+// check for blank file name
+func file_blank_chk(file string) {
+	if strings.TrimSpace(file) == "" { 
 		log.Fatal("> Missing file name!") 
 	}
+}
+
+// check file ext, add if missing
+func file_ext_chk(file string, ext string) (string) {
     f_ext := filepath.Ext(file)
     if len(f_ext) == 0 { 
 		file += ext
@@ -82,7 +86,7 @@ func cfg_set(key string, value string) {
 
 // get key value from config file
 // create file if it doesn't exist
-func cfg_get(key string) string {
+func cfg_get(key string) (string) {
     _, err := os.Stat(CFG_FILE)
     if errors.Is(err, os.ErrNotExist) {  // missing
 		cfg_set(key, strconv.Itoa(CFG_PORT))
@@ -96,4 +100,12 @@ func cfg_get(key string) string {
 		}
 	}
 	return ""
+}
+
+// get dlp file contents, check and update filename
+func get_dlp(file *string) ([]byte) {
+	file_blank_chk(*file)
+	*file = file_ext_chk(*file, ".dlp")
+	file_bytes, err := os.ReadFile(*file); if err != nil { log.Fatal(err) }
+	return file_bytes
 }

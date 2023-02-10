@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log"
 	"bytes"
+	"strconv"
+	"strings"
 	"go.bug.st/serial"
 )
 
@@ -56,3 +58,14 @@ func sp_wr_rd(sp serial.Port, wr_str string, act_f bool) (string) {
 	if act_f { fmt.Println(" done!") }
 	return rd_bytes.String()
 }
+
+// get knob data
+func get_knobs(port int) (string) {
+	sp := sp_open(port)
+	rx_str := sp_wr_rd(sp, "0 " + strconv.Itoa(KNOBS-1) + " rk ", false)
+	sp.Close()
+	rx_str = decruft_hcl(rx_str)
+	if strings.Count(rx_str, "\n") != KNOBS-1 { log.Fatalln("> Bad knob info!") }
+	return rx_str
+}	
+
