@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	VERSION = "5"										// librarian version
+	VERSION = "6"										// librarian version
 	//
 	SLOTS = 256											// pre + pro slots
 	SLOT_BYTES = 256									// bytes per slot
@@ -78,5 +78,5 @@ func ints_to_hexs(ints []int, bytes int) (string) {
 		}
 		hex_str += strconv.FormatInt(line_int, 16) + "\n"
 	}
-	return strings.TrimSpace(hex_str)
+	return hex_str
 }

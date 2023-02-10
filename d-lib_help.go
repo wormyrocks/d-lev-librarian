@@ -5,49 +5,50 @@ Usage: d-* [ command ] [ -flags <options>, ... ]
 Where: d-* = d-lin (Linux); d-win (Win); d-mac (Mac Intel); d-mm1 (Mac M1)
 
 Commands & Flags:
-  <command> -h                        help with command flags
-  help                                extended help
-  reset                               issue processor reset
-  ports -p <port>                     list ports / set port
-  slots -d <directory>                list slots w/ DLP file names
-  view  -k                            view knobs
-  view  -s=<slot> <-pro>              view a slot
-  view  -f=<file> <-pro>              view a DLP file
-  diff  -f=<file> -k <-pro>           compare DLP file to knobs
-  diff  -f=<file> -s=<slot> <-pro>    compare DLP file to slot
-  diff  -f=<file> -f2=<file> <-pro>   compare DLP file to file
-  ktof  -f=<file> <-pro>              download knobs to DLP file
-  ftok  -f=<file> <-pro>              upload DLP file to knobs
-  stof  -f=<file> -s=<slot> <-pro>    download slot to DLP file
-  ftos  -f=<file> -s=<slot> <-pro>    upload DLP file to slot
-  btos  -f=<file> -s=<slot> <-pro>    upload BNK DLP files
-  stob  -f=<file> <-hdr>              slot DLP names to BNK file
-  dump  -f=<file.ext>                 bulk download to file
-  pump  -f=<file.ext>                 bulk upload from file
-  split -f=<file.ext>                 split container file into sub files
-  hcl   <ver|crc|acal|22 rk|...>      issue HCL command**
+  <command> -h                                    help with command flags
+  help                                            extended help with examples
+  reset                                           issue processor reset
+  ports <-p port>                                 list ports / set port
+  slots <-d directory> <-inf>                     list slots w/ DLP file names
+  view  <-k|-s slot|-f file> <-pro>               view knobs|slot| DLP file
+  diff  <-f file> <-k|-s slot|-f2 file> <-pro>    compare DLP file to knobs|slot|DLP
+  ktof  <-f file> <-pro>                          download knobs to DLP file
+  ftok  <-f file> <-pro>                          upload DLP file to knobs
+  stof  <-f file> <-s slot> <-pro>                download slot to DLP file
+  ftos  <-f file> <-s slot> <-pro>                upload DLP file to slot
+  btos  <-f file> <-s slot> <-pro>                upload BNK DLP files
+  stob  <-f file> <-hdr> <-inf>                   slot DLP names to BNK file
+  dump  <-f file.ext>                             bulk download to PRE|PRO|EEPROM file
+  pump  <-f file.ext>                             bulk upload from PRE|PRO|EEPROM file
+  split <-f file.ext>                             split PRE|PRO|EEPROM container file into sub files
+  join  <-f file.ext>                             join DLP|PRE|PRO|SPI sub files into container file
+  morph <-k|-s slot|-f file> <-mo|n|e|f|r|-seed>  morph knobs|slot|DLP file to knobs
+  hcl   <ver|crc|acal|22 rk|...>                  issue HCL command**
+  loop  <"loop text">                             serial port loop back test***
 `
 
 var help_verbose_str = `
 Notes:
 - Flags may be entered in any order.
 - Flag prefix either "-" or "--" (e.g. -s=5; --s=5).
-- Flags / values separator either "=" or space (e.g. -s=5; -s 5).
-- If not provided, the file extension is added automatically.
+- Flags / values separator either space or "=" (e.g. -s 5; -s=5).
+- If not provided, the *.dlp file extension is added automatically.
 - If provided, an incorrect file extension flags an error.
-- The dump, pump, and split commands require a file extension to know what to do.
+- The dump, pump, split, and join commands require a file extension to know what to do.
 - A <y|n> user prompt precedes most file overwrites.
 - The "btos" and "stob" commands uses the file path to locate all files.
 - The "btos" command skips over lines in *.bnk files that begin with "//".
 - Individual preset and profile files share the same *.dlp file extension.
 - The serial port number is stored in the config file "d-lev.cfg".
 - The "ports" command updates the config file if a port number is given.
-- If missing, a config file will be automatically generated.
+- If missing, the config file will be automatically generated.
 - If "view" output doesn't fit in the window, resize it or change the font/layout.
 - Linux & Mac require executable files to be prefaced with: "./" e.g. "./d-mac".
+- Windows powershell requires executable files to be prefaced with: ".\" e.g. ".\d-win".
 - Linux users may need to join the "dialout" group for serial port access.
 - If the librarian hangs, CTRL-C will usually kill a terminal program.
 - ** See files HCL.txt, REGS.txt, and KNOBS.txt for details.
+- *** Requires USB dongle RX and TX wires to be connected together.
 
 Usage Examples: (e.g. Windows build)
 - Show version & compact help:
@@ -62,6 +63,8 @@ Usage Examples: (e.g. Windows build)
     d-win ports -p 5
 - List slots compared to DLP files in "_ALL_" directory:
     d-win slots -d _ALL_
+- List slots compared to DLP files in "_ALL_" directory with best guess:
+    d-win slots -d _ALL_ -inf
 - View all current knob values:
     d-win view -k
 - View preset in slot 20:
@@ -124,6 +127,18 @@ Usage Examples: (e.g. Windows build)
     d-win split -f my_setup.pro
 - Split file "my_new.pre" into "000.dlp" thru "249.dlp":
     d-win split -f my_new.pre
+- Join files "some.pre", "some.pro" and "some.spi" into "some.eeprom":
+    d-win join -f some.eeprom
+- Join files "pro_000.dlp" thru "pro_005.dlp" to "stuff.pro":
+    d-win join -f stuff.pro
+- Join files "000.dlp" thru "249.dlp" to "some.pre":
+    d-win join -f some.pre
+- Morph knobs (osc):
+    d-win morph -mo 12
+- Morph slot 23 (filters, resonator, seed):
+    d-win morph -s 23 -mf 5 -mr 20 -seed 9
+- Morph file "cello_8" (osc, filters, resonator):
+    d-win morph -f cello_8 -mo 10 -mf 10 -mr 10
 - Read the software version:
     d-win hcl ver
 - Calculate the EEPROM software CRC (s/b debb20e3):
@@ -136,4 +151,6 @@ Usage Examples: (e.g. Windows build)
     d-win hcl 1 0 wk
 - Read processor registers 0 thru 9:
     d-win hcl 0 9 rr
+- Loop back serial port text "testing 123":
+    d-win loop "testing 123"
 `

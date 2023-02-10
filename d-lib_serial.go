@@ -38,7 +38,6 @@ func sp_open(port int) (serial.Port) {
 	return sp
 }
 
-
 // write & read serial port, string i/o, optionally show activity
 func sp_wr_rd(sp serial.Port, wr_str string, act_f bool) (string) {
 	// write to port
@@ -55,12 +54,12 @@ func sp_wr_rd(sp serial.Port, wr_str string, act_f bool) (string) {
 		if act_f { chars = dots(chars) }
 	}
 	// done
-	if act_f { fmt.Println(" done!") }
+	if act_f { fmt.Println(" download done") }
 	return rd_bytes.String()
 }
 
-// get knob data
-func get_knobs(port int) (string) {
+// get knob data string
+func get_knob_str(port int) (string) {
 	sp := sp_open(port)
 	rx_str := sp_wr_rd(sp, "0 " + strconv.Itoa(KNOBS-1) + " rk ", false)
 	sp.Close()
@@ -68,4 +67,23 @@ func get_knobs(port int) (string) {
 	if strings.Count(rx_str, "\n") != KNOBS-1 { log.Fatalln("> Bad knob info!") }
 	return rx_str
 }	
+
+// get knob pint data
+func get_knob_pints(port int, mode string) ([]int) {
+	kints := hexs_to_ints(get_knob_str(port), 1)
+	return knob_pre_order(kints, mode)
+}
+
+// write knob pint data
+func put_knob_pints(port int, pints []int, mode string) {
+	sp := sp_open(port)
+	for kidx, kname := range knob_pnames {
+		_, _, pidx, pmode := pname_lookup(kname)
+		if mode == pmode {
+			wr_str := fmt.Sprint(kidx, " ", pints[pidx], " wk ")
+			sp_wr_rd(sp, wr_str, false)
+		}
+	}
+	sp.Close()
+}
 

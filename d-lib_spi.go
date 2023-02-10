@@ -74,7 +74,7 @@ func spi_wr(sp serial.Port, addr int, wr_str string, mode string, act_f bool) {
 	// done
 	spi_wr_wait(sp);
 	spi_wr_prot(sp, true);
-	if act_f { fmt.Println(" done!") }
+	if act_f { fmt.Println(" upload done") }
 }
 
 // return spi bulk addresses
@@ -119,13 +119,15 @@ func decruft_hcl(str_i string) (string) {
 	for _, line_str := range split_strs {
 		line_str := strings.TrimSpace(line_str)
 		idx := strings.Index(line_str, "]")
-		if idx >= 0 { str_all += line_str[idx+1:] + "\n" }
+		if idx >= 0 { 
+			str_all += line_str[idx+1:] + "\n" 
+		}
 	}
 	return strings.TrimSpace(str_all)
 }
 
-// get single slot data
-func get_slot(port int, slot int, mode string) (string) {
+// get single slot data string
+func get_slot_str(port int, slot int, mode string) (string) {
 	addr := spi_slot_addr(slot, mode)
 	sp := sp_open(port)
 	rx_str := spi_rd(sp, addr, addr + EE_PG_BYTES - 1, false)
@@ -133,12 +135,22 @@ func get_slot(port int, slot int, mode string) (string) {
 	return rx_str
 }
 
-// get all slots data
-func get_slots(port int) (string) {
+// get all slots data strings
+func get_slots_strs(port int) ([]string) {
 	addr, _ := spi_bulk_addrs("pre")
 	_, end := spi_bulk_addrs("pro")
 	sp := sp_open(port)
 	rx_str := spi_rd(sp, addr, end - 1, true)
 	sp.Close()
-	return rx_str
+	split_strs := strings.Split(rx_str, "\n")
+	if len(split_strs) < SLOTS * SLOT_BYTES/4 { log.Fatalln("> Bad slots info!") }
+	var strs []string
+	for s:=0; s<SLOTS; s++ {
+		pre_str := ""
+		for i:=s*SLOTS/4; i<(s+1)*SLOTS/4; i++ {
+			pre_str += split_strs[i] + "\n"
+		}
+		strs = append(strs, pre_str)
+	}
+	return strs
 }

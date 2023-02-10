@@ -11,15 +11,15 @@ knob     hex      label    range    page title
 7        07       -        0:19     
 8        08       Mon      0:63     LEVELS
 9        09       Line     0:63     
-10       0A       prev     0:63     
+10       0A       prev     -63:63     
 11       0B       Treb     -31:31   
 12       0C       osc      0:63     
 13       0D       Bass     -31:31   
 14       0E       nois     0:63     
 15       0F       -        0:19     
-16       10       vmod     -63:63   PREVIEW
+16       10       mode     0:11     PREVIEW
 17       11       pmod     -63:63   
-18       12       prev     0:63     
+18       12       prev     -63:63     
 19       13       treb     -31:31   
 20       14       harm     -31:31   
 21       15       bass     -31:31   
@@ -45,8 +45,8 @@ knob     hex      label    range    page title
 41       29       corr     0:31     
 42       2A       rate     0:31     
 43       2B       span     0:31     
-44       2C       cntr     0:31     
-45       2D       prvw     -12:11   
+44       2C       cmod     0:31     
+45       2D       cvol     0:31   
 46       2E       Post     0:3      
 47       2F       -        0:19     
 48       30       vmod     -63:63   NOISE

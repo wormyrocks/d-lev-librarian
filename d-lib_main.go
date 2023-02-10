@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"strconv"
+	"math/rand"
+	"time"
 )
 
 func main() {
@@ -23,7 +25,6 @@ func main() {
 		cfg_set("port", "0")
 		log.Fatalln("> Bad port in config file, setting port to 0!") 
 	}
-
 	// print help file if no args
 	if len(os.Args) < 2 {
 		help(false)  // short help
@@ -32,6 +33,8 @@ func main() {
 		switch os.Args[1] {
 			case "help", "-help", "--help", "-h", "--h": help(true)  // verbose help
 			case "reset": reset(port)
+			case "hcl": hcl(port)
+			case "loop":loop(port)
 			case "ports": port = ports(port)
 			case "slots": slots(port)
 			case "view": view(port)
@@ -43,15 +46,15 @@ func main() {
 			case "btos": btos(port)
 			case "dump": dump(port)
 			case "pump": pump(port)
-			case "hcl": hcl(port)
 			case "split": split()
+			case "join": join()
 			case "diff": diff(port)
+			case "morph": morph(port)
 			case "update": update()  // update stuff
 			case "dev": dev()  // dev stuff
 			default: log.Fatalln("> Unknown command:", os.Args[1])
 		}
 	}
-
 }  // end of main()
 
 
@@ -80,15 +83,33 @@ func hcl(port int) {
 	if len(os.Args) < 3 { 
 		fmt.Println("> Command line is blank!")
 	} else {
-		sp := sp_open(port)
 		wr_str := ""
 		for _, cmd := range os.Args[2:] {
 			wr_str += cmd + " "
 		}
+		sp := sp_open(port)
 		rd_str := sp_wr_rd(sp, wr_str, false)
+		sp.Close()
 		fmt.Print(rd_str)
 		fmt.Println(" issued hcl command:", wr_str)
+	}
+}
+
+// do loop command
+func loop(port int) {
+	if len(os.Args) < 3 { 
+		fmt.Println("> Loop text is blank!")
+	} else {
+		wr_str := ""
+		for _, arg := range os.Args[2:] {
+			wr_str += arg + " "
+		}
+		wr_str = strings.TrimSpace(wr_str)
+		sp := sp_open(port)
+		rd_str := sp_wr_rd(sp, wr_str + ">", false)
 		sp.Close()
+		fmt.Println("> tx:", wr_str)
+		fmt.Println("> rx:", strings.TrimSuffix(strings.TrimSpace(rd_str), ">"))
 	}
 }
 
@@ -107,11 +128,20 @@ func ports(port int) (int) {
 	}
 	if *port_str != "" { 
 		port_new, err := strconv.Atoi(*port_str)
-		if err != nil { log.Fatalln("> Bad port number!") }
-		if port_new >= len(ports) { log.Fatalln("> Port number out of range!") }
-		cfg_set("port", *port_str)
-		port = port_new
-		fmt.Println("> set port to:", port)
+		if err != nil { 
+			fmt.Println("> current port:", port)
+			log.Fatalln("> Bad port number!") 
+		} else if port_new >= len(ports) { 
+			fmt.Println("> current port:", port)
+			log.Fatalln("> Port number out of range!") 
+		} else {
+			cfg_set("port", *port_str)
+			port = port_new
+			fmt.Println("> set port to:", port)
+		}
+	} else if len(os.Args) > 2 { 
+		fmt.Println("> current port:", port)
+		log.Fatalln("> Use the -p flag to set the port!")
 	} else {
 		fmt.Println("> current port:", port)
 	}
@@ -130,17 +160,18 @@ func view(port int) {
 	mode := "pre"
 	if *pro { mode = "pro" }
 	if *knobs {  // view current knobs
-		rx_str := get_knobs(port)
-		fmt.Println(ui_prn_str(knob_ui_strs(rx_str)))
+		knob_str := get_knob_str(port)
+		fmt.Println(ui_prn_str(knob_ui_strs(knob_str)))
 		fmt.Println("> knobs")
 	} else if *file != "" {  // view a *.dlp file
-		file_bytes := get_dlp(file)
-		fmt.Println(ui_prn_str(pre_ui_strs(string(file_bytes), *pro)))
+		var file_str string
+		*file, file_str = get_file_str(*file, ".dlp")
+		fmt.Println(ui_prn_str(pre_ui_strs(file_str, *pro)))
 		fmt.Println(">", mode, "file", *file)
 	} else if *slot != "" {  // view a slot
 		slot_int, err := strconv.Atoi(*slot); if err != nil { log.Fatalln("> Bad slot number!") }
-		rx_str := get_slot(port, slot_int, mode)
-		fmt.Println(ui_prn_str(pre_ui_strs(rx_str, *pro)))
+		slot_str := get_slot_str(port, slot_int, mode)
+		fmt.Println(ui_prn_str(pre_ui_strs(slot_str, *pro)))
 		fmt.Println(">", mode, "slot", slot_int)
 	} else {
 		log.Fatalln("> Nothing to do!")
@@ -159,53 +190,60 @@ func diff(port int) {
 	//
 	mode := "pre"
 	if *pro { mode = "pro" }
-	file_bytes := get_dlp(file)
+	var file_str string
+	*file, file_str = get_file_str(*file, ".dlp")
 	if *knobs {  // compare knobs
-		rx_str := knob_pre_order(get_knobs(port), *pro)
-		fmt.Println(diff_prn_str(diff_strs(string(file_bytes), rx_str, *pro)))
+		knob_str := knob_pre_str(get_knob_str(port), *pro)
+		fmt.Println(diff_prn_str(diff_pres(file_str, knob_str, *pro)))
 		fmt.Println(">", mode, "file", *file, "vs. knobs" )
 	} else if *file2 != "" {  // compare a *.dlp file
-		file2_bytes := get_dlp(file2)
-		fmt.Println(diff_prn_str(diff_strs(string(file_bytes), string(file2_bytes), *pro)))
+		var file2_str string
+		*file2, file2_str = get_file_str(*file2, ".dlp")
+		fmt.Println(diff_prn_str(diff_pres(file_str, file2_str, *pro)))
 		fmt.Println(">", mode, "file", *file, "vs.", *file2 )
 	} else if *slot != "" {  // compare a slot
 		slot_int, err := strconv.Atoi(*slot); if err != nil { log.Fatalln("> Bad slot number!") }
-		rx_str := get_slot(port, slot_int, mode)
-		fmt.Println(diff_prn_str(diff_strs(string(file_bytes), rx_str, *pro)))
+		slot_str := get_slot_str(port, slot_int, mode)
+		fmt.Println(diff_prn_str(diff_pres(file_str, slot_str, *pro)))
 		fmt.Println(">", mode, "file", *file, "vs. slot", *slot )
 	} else {
 		log.Fatalln("> Nothing to do!")
 	}
 }
 
-// match slot contents w/ DLP files in dir & list
+// compare slots contents w/ DLP files in dir & list
 func slots(port int) {
 	sub := flag.NewFlagSet("slots", flag.ExitOnError)
 	dir := sub.String("d", ".", "`directory` name")
+	inf := sub.Bool("inf", false, "infer best guess")
 	sub.Parse(os.Args[2:])
 	//
-	*dir = filepath.Clean(*dir)
-	file_map := map_files(*dir, ".dlp")
-	rx_str := get_slots(port)
-	fmt.Print(slots_prn_str(map_slots(rx_str, file_map)))
+	name_strs, data_strs := get_dir_strs(*dir, ".dlp")
+	slots_strs := get_slots_strs(port)
+	if *inf {
+		fmt.Print(slots_prn_str(comp_slots(slots_strs, name_strs, data_strs, *inf)))
+	} else {
+		file_map := map_files(*dir, ".dlp")
+		fmt.Print(slots_prn_str(map_slots(slots_strs, file_map)))
+	}
 	fmt.Println("> slots matched to *.dlp files in directory", *dir)
 }
 
 // slot names => *.bnk
 func stob(port int) {
 	sub := flag.NewFlagSet("stob", flag.ExitOnError)
-	file := sub.String("f", "", "target `file` name")
+	file := sub.String("f", "", "bank `file` name")
 	headers := sub.Bool("hdr", false, "include headers")
+	inf := sub.Bool("inf", false, "infer best guess")
 	sub.Parse(os.Args[2:])
 	//
 	file_blank_chk(*file)
 	*file = file_ext_chk(*file, ".bnk")
 	file_exists_chk(*file)
 	dir, _ := filepath.Split(*file)
-	dir = filepath.Clean(dir)
-	file_map := map_files(dir, ".dlp")
-	rx_str := get_slots(port)
-	str := slots_bnk_str(map_slots(rx_str, file_map), *headers)
+	name_strs, data_strs := get_dir_strs(dir, ".dlp")
+	slots_strs := get_slots_strs(port)
+	str := slots_bnk_str(comp_slots(slots_strs, name_strs, data_strs, *inf), *headers)
 	err := os.WriteFile(*file, []byte(str), 0666); if err != nil { log.Fatal(err) }
 	fmt.Println("> slots matched to *.dlp files written to file", *file)
 }
@@ -248,16 +286,7 @@ func ktof(port int) {
 	file_blank_chk(*file)
 	*file = file_ext_chk(*file, ".dlp")
 	file_exists_chk(*file)
-	rx_str := get_knobs(port)
-	kints := hexs_to_ints(rx_str, 1)
-	if len(kints) != KNOBS { log.Fatalln("> Bad knob info!") }
-	pints := make([]int, SLOT_BYTES)
-	for kidx, kname := range knob_pnames {
-		_, _, pidx, pmode := pname_lookup(kname)
-		if mode == pmode {
-			pints[pidx] = kints[kidx]
-		}
-	}
+	pints := get_knob_pints(port, mode)
 	hexs := ints_to_hexs(pints, 4)
 	err := os.WriteFile(*file, []byte(hexs), 0666); if err != nil { log.Fatal(err) }
 	fmt.Println("> downloaded", mode, "knobs to", mode, "file", *file) 
@@ -277,8 +306,8 @@ func stof(port int) {
 	file_blank_chk(*file)
 	*file = file_ext_chk(*file, ".dlp")
 	file_exists_chk(*file)
-	rx_str := get_slot(port, slot_int, mode)
-	err = os.WriteFile(*file, []byte(rx_str), 0666); if err != nil { log.Fatal(err) }
+	slot_str := get_slot_str(port, slot_int, mode)
+	err = os.WriteFile(*file, []byte(slot_str), 0666); if err != nil { log.Fatal(err) }
 	fmt.Println("> downloaded", mode, "slot", slot_int, "to", mode, "file", *file) 
 }
 
@@ -317,18 +346,11 @@ func ftok(port int) {
 	//
 	mode := "pre"
 	if *pro { mode = "pro" }
-	file_bytes := get_dlp(file)
-	pints := hexs_to_ints(string(file_bytes), 4)
+	var file_str string
+	*file, file_str = get_file_str(*file, ".dlp")
+	pints := hexs_to_ints(file_str, 4)
 	if len(pints) < SLOT_BYTES { log.Fatalln("> Bad file info!") }
-	sp := sp_open(port)
-	for kidx, kname := range knob_pnames {
-		_, _, pidx, pmode := pname_lookup(kname)
-		if mode == pmode {
-			wr_str := fmt.Sprint(kidx, " ", pints[pidx], " wk ")
-			sp_wr_rd(sp, wr_str, false)
-		}
-	}
-	sp.Close()
+	put_knob_pints(port, pints, mode)
 	fmt.Println("> uploaded", mode, "file", *file, "to", mode, "knobs") 
 }
 
@@ -343,10 +365,11 @@ func ftos(port int) {
 	slot_int, err := strconv.Atoi(*slot); if err != nil { log.Fatalln("> Bad slot number!") }
 	mode := "pre"
 	if *pro { mode = "pro" }
-	file_bytes := get_dlp(file)
+	var file_str string
+	*file, file_str = get_file_str(*file, ".dlp")
 	addr := spi_slot_addr(slot_int, mode)
 	sp := sp_open(port)
-	spi_wr(sp, addr, string(file_bytes), mode, false)
+	spi_wr(sp, addr, file_str, mode, false)
 	sp.Close()
 	fmt.Println("> uploaded", mode, "file", *file, "to", mode, "slot", slot_int) 
 }
@@ -364,8 +387,10 @@ func btos(port int) {
 	if *pro { mode = "pro" }
 	file_blank_chk(*file)
 	*file = file_ext_chk(*file, ".bnk")
+
 	dir, bnk_file := filepath.Split(*file)
 	dir = filepath.Clean(dir)
+
 	bnk_bytes, err := os.ReadFile(filepath.Join(dir, bnk_file)); if err != nil { log.Fatal(err) }
 	bnk_split := strings.Split(strings.TrimSpace(string(bnk_bytes)), "\n")
 	sp := sp_open(port)
@@ -389,53 +414,61 @@ func split() {
 	file := sub.String("f", "", "source `file` name")
 	sub.Parse(os.Args[2:])
 	//
-	file_blank_chk(*file)
-	ext := strings.Trim(filepath.Ext(*file), ".")
-	switch ext {
-		case "pre", "pro", "eeprom" : // these are OK
-		default : log.Fatalln("> Unknown file extension", ext)
+	split_file(*file)
+}
+
+
+// join bulk files
+func join() {
+	sub := flag.NewFlagSet("join", flag.ExitOnError)
+	file := sub.String("f", "", "target `file` name")
+	sub.Parse(os.Args[2:])
+	//
+	join_files(*file)
+}
+
+
+///////////
+// morph //
+///////////
+
+func morph(port int) {
+	sub := flag.NewFlagSet("morph", flag.ExitOnError)
+	file := sub.String("f", "", "source `file` name")
+	knobs := sub.Bool("k", false, "source knobs")
+	slot := sub.String("s", "", "source `slot` number")
+	seed := sub.Int("seed", int(time.Now().UnixNano()), "random seed")
+	mo := sub.Int("mo", 0, "oscillator `mult`iplier")
+	mn := sub.Int("mn", 0, "noise `mult`iplier")
+	me := sub.Int("me", 0, "eq (bass & treble) `mult`iplier")
+	mf := sub.Int("mf", 0, "filter `mult`iplier")
+	mr := sub.Int("mr", 0, "resonator `mult`iplier")
+	sub.Parse(os.Args[2:])
+	rand.Seed(int64(*seed))
+	prn_str := ""
+	var pints []int
+	if *mo | *mn | *me | *mf | *mr == 0 {
+		log.Fatalln("> Nothing to do!")
+	} else if *knobs {  // morph current knobs
+		pints = pints_signed(get_knob_pints(port, "pre"), false)
+		prn_str = fmt.Sprint("> morphed knobs")
+	} else if *file != "" {  // morph a *.dlp file
+		var file_str string
+		*file, file_str = get_file_str(*file, ".dlp")
+		pints = pints_signed(hexs_to_ints(file_str, 4), false)
+		prn_str = fmt.Sprint("> morphed file ", *file)
+	} else if *slot != "" {  // morph a slot
+		slot_int, err := strconv.Atoi(*slot); if err != nil { log.Fatalln("> Bad slot number!") }
+		slot_str := get_slot_str(port, slot_int, "pre")
+		pints = pints_signed(hexs_to_ints(slot_str, 4), false)
+		prn_str = fmt.Sprint("> morphed slot ", slot_int)
+	} else {
+		log.Fatalln("> Nothing to do!")
 	}
-	file_bytes, err := os.ReadFile(*file); if err != nil { log.Fatal(err) }
-	str_split := (strings.Split(strings.TrimSpace(string(file_bytes)), "\n"))
-	if ext == "eeprom" {
-		var pre_str string
-		var pro_str string
-		var spi_str string
-		for line, str := range str_split {
-			if line < PRE_SLOTS*SLOT_BYTES/4 { 
-				pre_str += str + "\n"
-			} else if line < SLOTS*SLOT_BYTES/4 { 
-				pro_str += str + "\n"
-			} else { 
-				spi_str += str + "\n"
-			}
-		}
-		base_file := strings.TrimSuffix(*file, filepath.Ext(*file))
-		pre_file := base_file + ".pre"
-		pro_file := base_file + ".pro"
-		spi_file := base_file + ".spi"
-		file_exists_chk(pre_file)
-		err = os.WriteFile(pre_file, []byte(pre_str), 0666); if err != nil { log.Fatal(err) }
-		file_exists_chk(pro_file)
-		err = os.WriteFile(pro_file, []byte(pro_str), 0666); if err != nil { log.Fatal(err) }
-		file_exists_chk(spi_file)
-		err = os.WriteFile(spi_file, []byte(spi_str), 0666); if err != nil { log.Fatal(err) }
-		fmt.Println("> split", *file, "to", pre_file, pro_file, spi_file )
-	} else {  // pre | pro
-		var dlp_str string
-		file_num := 0
-		for line, str := range str_split {
-			dlp_str += str + "\n"
-			if line % 64 == 63 { 
-				pre_file := fmt.Sprintf("%03d", file_num) + ".dlp"
-				if ext == "pro" { pre_file = "pro_" + pre_file }
-				err = os.WriteFile(pre_file, []byte(dlp_str), 0666); if err != nil { log.Fatal(err) }
-				file_num++
-				dlp_str = ""
-			}
-		}
-		fmt.Println("> split", *file, "to", file_num, "numbered *.dlp files" )
-	}
+	prn_str += fmt.Sprint(" (-seed=", *seed, ")")
+	pints = morph_pints(pints, *mo, *mn, *me, *mf, *mr)
+	put_knob_pints(port, pints, "pre")
+	fmt.Println(prn_str)
 }
 
 
@@ -445,13 +478,14 @@ func split() {
 
 // read, update, overwrite all *.dlp in given dir
 func update() {
-	sub := flag.NewFlagSet("slots", flag.ExitOnError)
+	sub := flag.NewFlagSet("update", flag.ExitOnError)
 	dir := sub.String("d", ".", "`directory` name")
 	pro := sub.Bool("pro", false, "profile mode")
 	dry := sub.Bool("dry", true, "dry-run mode")
+	rob := sub.Bool("rob", false, "schwimmer mode")
 	sub.Parse(os.Args[2:])
 	//
-	update_dlp(*dir, *pro, *dry)
+	update_dlp(*dir, *pro, *dry, *rob)
 }
 
 
@@ -460,16 +494,6 @@ func update() {
 /////////
 
 func dev() {
-
-/*
-	// generate DLP files with random content for testing
-	sub := flag.NewFlagSet("dev", flag.ExitOnError)
-	dir := sub.String("d", ".", "`directory` name")
-	sub.Parse(os.Args[2:])
-	//
-	gen_test_dlps(*dir)
-*/
-
 
 	// find DLP files with certain characteristics
 	sub := flag.NewFlagSet("dev", flag.ExitOnError)

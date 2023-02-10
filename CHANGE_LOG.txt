@@ -13,18 +13,56 @@
 ////////////////
 // CHANGE LOG //
 ////////////////
-2023-01-01 : v5
-- Command update: pitch correction & stereo normalizations.
+2023-01-31 : v6
+- Command morph now has -mo, -mn, -me -mf, -mr scalings, -seed assignment.
+- Command slots column width now adapts to file name lengths.
+
+2023-01-29 : v6
+- Fleshing out morph command.
+
+2023-01-28 : v6
+- New join command.
+- Update command now skips blank files.
+- Bug: ints_to_hexs was incorrectly trimming last '\n' leading to bad DLP concat.
+
+2023-01-25 : v6
+- Changes to reflect SW update.
+
+2023-01-17 : v6
+- Some refactoring in preset code.
+- Slots command: restored use of file map when -inf=false (faster).
+
+2023-01-15 : v6
+- Changes to reflect type shuffling & changes.
+
+2023-01-12 : v6
+- Loop command: more robust, removed timer.
+
+2023-01-10 : v6
+- Ports command: slight change to text output.
+- Help text edited a bit (removed flags "=").
+
+2023-01-09 : v6 - RELEASED & WITHDRAWN -
+- New loop command: test raw dongle.
+- Split command: now deposits files in source directory.
+- Update command: now reports de-fluff count.
+
+2023-01-04 : v6
+- Slots command: new -inf flag to return best guess if no exact match.
+- Some cleaning & generalization of file subs.
+
+2023-01-01 : v5 - RELEASED -
+- Update command: pitch correction & stereo normalizations.
 
 2022-12-30 : v5
-- Command update: NOISE:vmod and RESON:mode changes.
+- Update command: NOISE:vmod and RESON:mode changes.
 
 2022-12-28 : v5
-- Command diff: now compares a file to knobs / slot / file.
+- Diff command: now compares a file to knobs / slot / file.
 
 2022-12-27 : v5
-- Command update: convert all presets to latest arch (undocumented).
-- Command diff: only displays screens with differences.
+- Update command: convert all presets to latest arch (undocumented).
+- Diff command: only displays screens with differences.
 
 2022-12-24 : v5
 - New "diff" command to compare two preset files.

@@ -87,7 +87,7 @@ var pre_params = []param_t {  // these are in preset / profile / slot order
 	{0x31, "sprd", "o_p19_ds"},	// 19
 	{0x24, "xmix", "o_p20_ds"},	// 20
 	// noise gen:
-	{0x74, "nois",  "n_p0_ds"},	// 21
+	{0x31, "nois",  "n_p0_ds"},	// 21
 	{0x70, "freq",  "n_p3_ds"},	// 22
 	{0x76, "reso",  "n_p4_ds"},	// 23
 	{0xa4, "mode",  "n_p5_ds"},	// 24
@@ -138,7 +138,7 @@ var pre_params = []param_t {  // these are in preset / profile / slot order
 	{0xca, "vmod", "f_p27_ds"},	// 67
 	{0x76, "reso", "f_p28_ds"},	// 68
 	// pitch correction:
-	{0x24, "cntr", "pc_p0_ds"},	// 69
+	{0x24, "cmod", "pc_p0_ds"},	// 69
 	{0x24, "rate", "pc_p1_ds"},	// 70
 	{0x44, "span", "pc_p2_ds"},	// 71
 	{0x24, "corr", "pc_p3_ds"},	// 72
@@ -152,11 +152,11 @@ var pre_params = []param_t {  // these are in preset / profile / slot order
 	{0x73, "damp",  "e_p5_ds"},	// 79
 	{0x25, "dloc",  "e_p6_ds"},	// 80
 	// pitch preview:
-	{0x74, "prev", "pp_p0_ds"},	// 81
+	{0x31, "prev", "pp_p0_ds"},	// 81
 	{0xc5, "harm", "pp_p1_ds"},	// 82
 	{0xa7, "oct ", "pp_p2_ds"},	// 83
 	{0xca, "pmod", "pp_p3_ds"},	// 84
-	{0xca, "vmod", "pp_p4_ds"},	// 85
+	{0x0b, "mode", "pp_p4_ds"},	// 85
 	{0xc5, "treb", "pp_p5_ds"},	// 86
 	{0xc5, "bass", "pp_p6_ds"},	// 87
 	// midi:
@@ -167,7 +167,8 @@ var pre_params = []param_t {  // these are in preset / profile / slot order
 	{0x30, "velo",  "m_p4_ds"},	// 92
 	{0xfc, "cc  ",  "m_p5_ds"},	// 93
 	{0x45, "cloc",  "m_p6_ds"},	// 94
-	{0x8b, "prvw", "pp_p7_ds"},	// 95
+	// misc:
+	{0x30, "cvol",  "e_p7_ds"},	// 95
 	{0xa3, "bank",  "b_p0_ds"},	// 96
 }
 
@@ -177,7 +178,7 @@ var knob_pnames = []string {  // these are in UI page order (hcl rk & wk knob or
 	"pp_p4_ds", "pp_p3_ds", "pp_p0_ds", "pp_p5_ds", "pp_p1_ds", "pp_p6_ds", "pp_p2_ds", "menu_pg_ds",  // [16:23] PREVIEW
 	"m_p1_ds",  "m_p4_ds",  "m_p6_ds",  "m_p5_ds",  "m_p2_ds",  "m_p0_ds",  "m_p3_ds",  "menu_pg_ds",  // [24:31] MIDI
 	"e_p0_ds",  "e_p3_ds",  "e_p1_ds",  "e_p2_ds",  "e_p4_ds",  "e_p5_ds",  "e_p6_ds",  "menu_pg_ds",  // [32:39] VOLUME
-	"pc_p4_ds", "pc_p3_ds", "pc_p1_ds", "pc_p2_ds", "pc_p0_ds", "pp_p7_ds", "t_p2_ds",  "menu_pg_ds",  // [40:47] PITCH
+	"pc_p4_ds", "pc_p3_ds", "pc_p1_ds", "pc_p2_ds", "pc_p0_ds", "e_p7_ds",  "t_p2_ds",  "menu_pg_ds",  // [40:47] PITCH
 	"n_p9_ds",  "n_p8_ds",  "n_p0_ds",  "n_p13_ds", "n_p10_ds", "n_p11_ds", "n_p14_ds", "menu_pg_ds",  // [48:55] NOISE
 	"n_p7_ds",  "n_p6_ds",  "n_p3_ds",  "n_p0_ds",  "n_p5_ds",  "n_p12_ds", "n_p4_ds",  "menu_pg_ds",  // [56:63] FLT_NOISE
 	"o_p4_ds",  "o_p3_ds",  "o_p2_ds",  "o_p15_ds", "o_p1_ds",  "o_p14_ds", "o_p5_ds",  "menu_pg_ds",  // [64:71] 0_OSC
@@ -217,12 +218,90 @@ var page_names = []string {
 	"   SYSTEM",
 }
 
+// return ptype max value
+func ptype_max(ptype int) int {
+	max := 0
+	switch {
+	case ptype < 0x20 : // 0 thru 31
+		max = ptype
+	case ptype < 0x70 :  // 31, 63, 127, 255
+		max = (1 << ((ptype & 0x3) + 5)) - 1
+	case ptype < 0x72 : 
+		max = 192
+	case ptype == 0x72 :
+		max = 127
+	case ptype < 0x78 :
+		max = 63
+	case ptype == 0x7d :
+		max = 99
+	case ptype == 0x7e :
+		max = 249
+	case ptype == 0x7f :
+		max = 19
+	case ptype < 0xc0 :
+		max = ptype & 0x1f
+	case ptype < 0xf0 :  // 15, 31, 63, 127
+		max = (1 << ((ptype & 0x3) + 4)) - 1
+	case ptype == 0xf0 :
+		max = 127
+	case ptype < 0xf3 :
+		max = 63
+	case ptype == 0xfc :
+		max = 31
+	case ptype == 0xfd :
+		max = 99
+	default:
+		max = 0
+	}
+	return max
+	}
+
+// return type min value
+func ptype_min(ptype int) int {
+	min := 0
+	switch {
+	case ptype < 0x80 :
+		min = 0
+	case ptype < 0xa0 :  // -1, -2, ..., -16
+		min = -(ptype_max(ptype) + 1)
+	case ptype == 0xfc :
+		min = -127
+	default:
+		min = -ptype_max(ptype)
+	}
+	return min
+}
+
+// return type signed flag
+func ptype_signed(ptype int) bool {
+	if ptype_min(ptype) < 0 { return true }
+	return false
+}
+
+// make preset data signed
+func pints_signed(pints []int, pro bool) ([]int) {
+	if pro {
+		for pidx, param := range pro_params {
+			if ptype_signed(param.ptype) {
+				pints[pidx] = int(int8(uint8(pints[pidx]))) 
+			}
+		}
+	} else {
+		for pidx, param := range pre_params {
+			if ptype_signed(param.ptype) {
+				pints[pidx] = int(int8(uint8(pints[pidx]))) 
+			}
+		}
+	}
+	return pints
+}
+
 // return filter freq value (type 0x70, 0x71)
 // 7041 * EXP2((ENC * (2^27) / 24) + 3/4)
 // input: [0:192]
 // output: 27 to 7040 (Hz)
-func filt_freq(enc int) (int) {
-	enc_mo := float64(int64(enc) * ((1 << 27) / 24) + 0xc0000000)
+func filt_freq(pint int) (int) {
+	enc_mo := float64(int64(pint) * ((1 << 27) / 24) + 0xc0000000)
 	return int(7041 * (math.Pow(2, enc_mo / math.Pow(2, 27)) / math.Pow(2, 32)))
 }
 
@@ -230,21 +309,21 @@ func filt_freq(enc int) (int) {
 // 48001 / ((((((~(ENC<<25))^4)*0.871)+((~(ENC<<25))>>3))>>22)+4)
 // input: [0:127]
 // output: 46 to 9600 (Hz)
-func reson_freq(enc int) (int) {
-	fs_rev := uint64(^(uint32(enc) << 25))
+func reson_freq(pint int) (int) {
+	fs_rev := uint64(^(uint32(pint) << 25))
 	sq := (fs_rev * fs_rev) >> 32
 	qd := (sq * sq) >> 32
 	return int(48001 / ((((uint64(float64(qd) * 0.871) + (fs_rev >> 3)) >> 22) + 4)))
 }
 
-// given encoder value and type, return display string[5]
-func enc_disp(enc int, ptype int) (string) {
+// given pint and type, return display string[5]
+func enc_disp(pint int, ptype int) (string) {
 	switch ptype {
-		case 0x70, 0x71 : enc = filt_freq(enc)
-		case 0x72 : enc = reson_freq(enc)
-		default : if ptype >= 0x80 { enc = int(int8(uint8(enc))) }  // signed
+		case 0x70, 0x71 : pint = filt_freq(pint)
+		case 0x72 : pint = reson_freq(pint)
+		default : if ptype_signed(ptype) { pint = int(int8(uint8(pint))) }  // signed
 	}
-	return fmt.Sprintf("%5v", enc)
+	return fmt.Sprintf("%5v", pint)
 }
 
 // given pname, return ptype, plabel, pidx, pgroup
@@ -277,8 +356,20 @@ func knob_lookup(pidx int, pro bool) (int, bool) {
 	return 0, false
 }
 
+// put knob ints in preset / slot order
+func knob_pre_order(kints []int, mode string) ([]int) {
+	pints := make([]int, SLOT_BYTES)
+	for kidx, kname := range knob_pnames {
+		_, _, pidx, pmode := pname_lookup(kname)
+		if mode == pmode {
+			pints[pidx] = kints[kidx]
+		}
+	}
+	return pints
+}
+
 // put knob hex str in preset / slot order, return hex string
-func knob_pre_order(knob_str string, pro bool) (string) {
+func knob_pre_str(knob_str string, pro bool) (string) {
 	str_split := (strings.Split(strings.TrimSpace(knob_str), "\n"))
 	if len(str_split) < KNOBS { log.Fatalln("> Bad knob info!") }
 	hex_str := ""
@@ -296,15 +387,15 @@ func knob_pre_order(knob_str string, pro bool) (string) {
 
 // generate knob ui display strings
 func knob_ui_strs(hex_str string) ([]string) {
-	ints := hexs_to_ints(hex_str, 1)
-	if len(ints) < KNOBS { log.Fatalln("> Bad knob info!") }
+	kints := hexs_to_ints(hex_str, 1)
+	if len(kints) < KNOBS { log.Fatalln("> Bad knob info!") }
 	var strs []string
 	for kidx, kname := range knob_pnames {
 		ptype, plabel, _, _ := pname_lookup(kname)
 		if kidx % UI_KNOBS == UI_PAGE_KNOB { 
 			strs = append(strs, page_names[kidx / UI_KNOBS])
 		} else { 
-			strs = append(strs, plabel + enc_disp(ints[kidx], ptype)) 
+			strs = append(strs, plabel + enc_disp(kints[kidx], ptype)) 
 		}
 	}
 	return strs
@@ -312,8 +403,8 @@ func knob_ui_strs(hex_str string) ([]string) {
 
 // generate pre / pro / slot ui display strings
 func pre_ui_strs(hex_str string, pro bool) ([]string) {
-	ints := hexs_to_ints(hex_str, 4)
-	if len(ints) < SLOT_BYTES { log.Fatalln("> Bad file / slot info!") }
+	pints := hexs_to_ints(hex_str, 4)
+	if len(pints) < SLOT_BYTES { log.Fatalln("> Bad file / slot info!") }
 	var strs []string
 	for idx, pname := range knob_pnames {
 		ptype, plabel, pidx, pgroup := pname_lookup(pname)
@@ -321,7 +412,7 @@ func pre_ui_strs(hex_str string, pro bool) ([]string) {
 			strs = append(strs, page_names[idx / UI_KNOBS])
 		} else { 
 			if pro == (pgroup == "pro") && pgroup != "not" {
-				strs = append(strs, plabel + enc_disp(ints[pidx], ptype)) 
+				strs = append(strs, plabel + enc_disp(pints[pidx], ptype)) 
 			} else {
 				strs = append(strs, plabel + "     ") 
 			}
@@ -349,25 +440,25 @@ func ui_prn_str(strs []string) (string) {
 	return strings.TrimSpace(prn_str)
 }
 
-// generate diff display strings
-func diff_strs(hex_str0, hex_str1 string, pro bool) ([]string, []string, []bool) {
-	ints0 := hexs_to_ints(hex_str0, 4)
-	ints1 := hexs_to_ints(hex_str1, 4)
-	if (len(ints0) < SLOT_BYTES) || (len(ints1) < SLOT_BYTES) { log.Fatalln("> Bad file info!") }
+// generate preset diff display strings
+func diff_pres(pre_str0, pre_str1 string, pro bool) ([]string, []string, []bool) {
+	pints0 := hexs_to_ints(pre_str0, 4)
+	pints1 := hexs_to_ints(pre_str1, 4)
+	if (len(pints0) < SLOT_BYTES) || (len(pints1) < SLOT_BYTES) { log.Fatalln("> Bad preset info!") }
 	var strs0 []string
 	var strs1 []string
 	var diffs []bool
-	for idx, pname := range knob_pnames {
+	for kidx, pname := range knob_pnames {
 		ptype, plabel, pidx, pgroup := pname_lookup(pname)
-		if idx % UI_KNOBS == UI_PAGE_KNOB { 
-			strs0 = append(strs0, page_names[idx / UI_KNOBS])
-			strs1 = append(strs1, page_names[idx / UI_KNOBS])
+		if kidx % UI_KNOBS == UI_PAGE_KNOB { 
+			strs0 = append(strs0, page_names[kidx / UI_KNOBS])
+			strs1 = append(strs1, page_names[kidx / UI_KNOBS])
 			diffs = append(diffs, false)
 		} else { 
 			if pro == (pgroup == "pro") && pgroup != "not" {
-				strs0 = append(strs0, plabel + enc_disp(ints0[pidx], ptype)) 
-				if ints0[pidx] != ints1[pidx] {
-					strs1 = append(strs1, plabel + enc_disp(ints1[pidx], ptype)) 
+				strs0 = append(strs0, plabel + enc_disp(pints0[pidx], ptype)) 
+				if pints0[pidx] != pints1[pidx] {
+					strs1 = append(strs1, plabel + enc_disp(pints1[pidx], ptype)) 
 					diffs = append(diffs, true)
 				} else {
 					strs1 = append(strs1, plabel + "     ") 
@@ -411,17 +502,59 @@ func diff_prn_str(strs0, strs1 []string, diffs []bool) (string) {
 	return strings.TrimSpace(prn_str)
 }
 
-// map slots in preset string, return slice
-func map_slots(pre string, file_map map[string]string) ([]string) {
-	split_strs := strings.Split(pre, "\n")
-	if len(split_strs) < SLOTS * SLOT_BYTES/4 { log.Fatalln("> Bad slots info!") }
-	var strs []string
-	for s:=0; s<SLOTS; s++ {
-		pre_str := ""
-		for i:=s*SLOTS/4; i<(s+1)*SLOTS/4; i++ {
-			pre_str += split_strs[i] + "\n"
+// compare 2 pre strings, return sum of squares of differences
+func comp_pres(pre_str0, pre_str1 string, pro bool) (int) {
+	pints0 := pints_signed(hexs_to_ints(pre_str0, 4), pro)
+	pints1 := pints_signed(hexs_to_ints(pre_str1, 4), pro)
+	if (len(pints0) < SLOT_BYTES) || (len(pints1) < SLOT_BYTES) { log.Fatalln("> Bad preset info!") }
+	ssd := 0
+	if pro {
+		for pidx, _ := range pro_params {
+			diff := pints0[pidx] - pints1[pidx]
+			ssd += diff * diff
 		}
-		file, exists := file_map[strings.TrimSpace(pre_str)]
+	} else {
+		for pidx, _ := range pre_params {
+			diff := pints0[pidx] - pints1[pidx]
+			ssd += diff * diff
+		}
+	}
+	return ssd
+}
+		
+// compare slots data to file data, return slice
+func comp_slots(slots_strs, name_strs, data_strs []string, infer bool) ([]string) {
+	var strs []string
+	for slot_idx, slot_str := range slots_strs {
+		first := true
+		pro := false
+		if slot_idx >= 250 { pro = true }
+		ssd_min := 0
+		idx_min := 0
+		for file_idx, data_str := range data_strs {
+			ssd := comp_pres(slot_str, data_str, pro)
+			if first || (ssd < ssd_min) {
+				ssd_min = ssd
+				idx_min = file_idx
+				first = false
+			}
+		}
+		if ssd_min == 0 { 
+			strs = append(strs, name_strs[idx_min])
+		} else if infer {
+			strs = append(strs, name_strs[idx_min] + "? (" + fmt.Sprint(math.Ceil(math.Sqrt(float64(ssd_min)))) + ")") 
+		} else {
+			strs = append(strs, "_??_") 
+		}
+	}
+	return strs
+}
+
+// compare slots data to file map, return slice
+func map_slots(slots_strs []string, file_map map[string]string) ([]string) {
+	var strs []string
+	for _, slot_str := range slots_strs {
+		file, exists := file_map[strings.TrimSpace(slot_str)]
 		if !exists { file = "_??_" }
 		strs = append(strs, file)
 	}
@@ -431,11 +564,23 @@ func map_slots(pre string, file_map map[string]string) ([]string) {
 // render slots display strings to printable string
 func slots_prn_str(strs []string) (string) {
 	if len(strs) < SLOTS { log.Fatalln("> Bad slots info!") }
-	var prn_str string
-	for row:=0; row<PRE_SLOTS/5; row++ {
-		for col:=0; col<5; col++ {
-			idx := col*50 + row
-			prn_str += fmt.Sprintf("[%2v] %-15s", idx, strings.TrimSpace(strs[idx]))
+	const cols int = 5
+	const rows int = PRE_SLOTS/cols
+	// find minimum column widths
+	var col_w [cols]int
+	for row:=0; row<rows; row++ {
+		for col:=0; col<cols; col++ {
+			idx := col*rows + row
+			str_len := len(strings.TrimSpace(strs[idx]))
+			if str_len > col_w[col] { col_w[col] = str_len }
+		}
+	}
+	// assemble print string
+	prn_str := ""  
+	for row:=0; row<rows; row++ {
+		for col:=0; col<cols; col++ {
+			idx := col*rows + row
+			prn_str += fmt.Sprintf("[%2v] %-*s", idx, col_w[col]+2, strings.TrimSpace(strs[idx]))
 		}
 		if row < PRO_SLOTS {  // pros
 			prn_str += fmt.Sprintf("[%1v] %s", row, strings.TrimSpace(strs[row+PRE_SLOTS]))
@@ -466,12 +611,31 @@ func slots_bnk_str(strs []string, headers bool) (string) {
 }
 
 
+
 ////////////
 // update //
 ////////////
 
+// reso rescaling for 82db_dn_rev to 96db_rev
+func reso_rescale(reso int) (int) {
+	switch {
+		case reso < 3 : return reso + 1
+		case reso < 12 : return reso
+		case reso < 20 : return reso - 1
+		case reso < 28 : return reso - 2
+		case reso < 37 : return reso - 3
+		case reso < 57 : return reso - 4
+		case reso < 59 : return reso - 3
+		case reso == 59 : return reso - 2
+		case reso == 60 : return reso - 1
+		case reso < 63 : return reso + 1
+		default : return reso
+	}
+}
+
+
 // read, update, write all *.dlp files in dir
-func update_dlp(dir string, pro bool, dry bool) {
+func update_dlp(dir string, pro, dry bool, rob bool) {
 	dir = filepath.Clean(dir)
 	// prompt user
 	if !dry { 
@@ -485,203 +649,401 @@ func update_dlp(dir string, pro bool, dry bool) {
 	dlp_cnt := 0
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".dlp" && file.IsDir() == false {
-			dlp_cnt++
 			file_name := file.Name()
 			file_path := filepath.Join(dir, file_name)
 			fmt.Println(dlp_cnt, "-", file_name)
+			dlp_cnt++
 			// read in
 			file_bytes, err := os.ReadFile(file_path); if err != nil { log.Fatal(err) }
-			ints := hexs_to_ints(string(file_bytes), 4)
+			pints := pints_signed(hexs_to_ints(string(file_bytes), 4), pro)
 			upd_f := false
-			if pro {  // PROFILES
-				// zero out high fluff
-				nz_f := false
-				for idx, param := range ints {
+			zero_f := true
+			for _, param := range pints {
+				if param != 0 { zero_f = false }
+			}
+			//////////////
+			// PROFILES //
+			//////////////
+			if pro && !zero_f {
+				/////////////////////////
+				// zero out high fluff //
+				/////////////////////////
+				nz_cnt := 0
+				for idx, param := range pints {
 					if idx >= len(pro_params) { 
 						if param != 0 { 
-							ints[idx] = 0
-							nz_f = true 
+							pints[idx] = 0
+							nz_cnt++
 						}
 					}
 				}
-				if nz_f { 
-					fmt.Println("- fluff zeroed")
+				if nz_cnt > 0 { 
+					fmt.Println("- fluffs zeroed:", nz_cnt)
 					upd_f = true 
 				}
-			} else {  // PRESETS
-				// zero out high fluff
-				nz_f := false
-				for idx, param := range ints {
+			/////////////
+			// PRESETS //
+			/////////////
+			} else if !zero_f {
+				/////////////////////////
+				// zero out high fluff //
+				/////////////////////////
+				nz_cnt := 0
+				for idx, param := range pints {
 					if idx >= len(pre_params) { 
 						if param != 0 { 
-							ints[idx] = 0
-							nz_f = true 
+							pints[idx] = 0
+							nz_cnt++
 						}
 					}
 				}
-				if nz_f { 
-					fmt.Println("- fluff zeroed")
+				if nz_cnt > 0 { 
+					fmt.Println("- fluffs zeroed:", nz_cnt)
 					upd_f = true 
 				}
-				// update all formant levels (if necessary)
-				levls := []int{  // signed
-					int(int8(ints[42])), 
-					int(int8(ints[44])), 
-					int(int8(ints[46])), 
-					int(int8(ints[56])), 
-					int(int8(ints[58])), 
-					int(int8(ints[60])), 
-					int(int8(ints[63])), 
-					int(int8(ints[65])) }
-				min := 0
-				max := 0
-				for _, levl := range levls {
-					if levl > max { max = levl }
-					if levl < min { min = levl }
-				}
-				abs_max := max
-				if -min > max { abs_max = -min }
-				// only update if formants in use
-				if abs_max != 0 {
-					delta := 8  // +6dB
-					if abs_max + delta > 63 { delta = 63 - abs_max }
-					if delta < 8 { 
-						fmt.Println("- FORM:delta", delta) 
-					}
-					if delta != 0 {
-						for idx, _ := range levls {
-							if levls[idx] < 0 { 
-								levls[idx] -= delta
-							} else if levls[idx] > 0 { 
-								levls[idx] += delta 
-							}
-						}
-						fmt.Println("- FORM:levl", levls)
-						ints[42] = levls[0]
-						ints[44] = levls[1]
-						ints[46] = levls[2]
-						ints[56] = levls[3]
-						ints[58] = levls[4]
-						ints[60] = levls[5]
-						ints[63] = levls[6]
-						ints[65] = levls[7]
+
+				if rob {
+					////////////////////////////////
+					// set pp defaults for rob s. //
+					////////////////////////////////
+					prev := pints[81]
+					prev_new := 63
+					if prev != prev_new { 
+						pints[81] = prev_new
+						fmt.Println("- PREVIEW:prev", prev, "=>", prev_new) 
 						upd_f = true
 					}
-					// update reson xmix level (if necessary)
-					xmix := int(int8(ints[39]))  // signed
-					mode := int(int8(ints[40]))  // signed
-					if (mode <= 0) && (xmix != 0) && (delta < 8) {
-						db_ratio := math.Pow(10, ((float64(delta)-8)*3/4)/20)
-						xm_norm := float64(xmix) / 64
-						xm_sign := math.Copysign(1, xm_norm)
-						xm_abs := xm_sign * xm_norm
-						xm_ratio := xm_abs / (1 + xm_abs)
-						xm_ratio_new := xm_ratio * db_ratio
-						xmix_new := int(math.Round(64 * xm_sign * xm_ratio_new / (1 - xm_ratio_new)))
-						ints[39] = xmix_new
-						fmt.Println("- RESON:xmix", xmix, "=>", xmix_new)
-						upd_f = true
-					}
-				}
-				// update reson mode (if necessary)
-				reson_mode := int(int8(ints[40]))  // signed
-				if reson_mode != 0 {
-					mode_new := -reson_mode
-					ints[40] = mode_new
-					fmt.Println("- RESON:mode", reson_mode, "=>", mode_new)
-					upd_f = true
-				}
-				// update noise knobs
-				if ints[21] == 0 {  // if nois[0] kill everything
-					nz_f := false
-					for idx, levl := range ints {
-						if (idx >= 22) && (idx <= 33) { 
-							if levl != 0 { 
-								nz_f = true
-								ints[idx] = 0
-							}
-						}
-					}
-					if nz_f { 
-						fmt.Println("- NOISE:all: => 0")
-						upd_f = true 
-					}
-				} else { // adjust nois
-					nois := float64(ints[21])  // unsigned
-					vmod := float64(int8(ints[28]))  // signed
-					nois_new := int(math.Round(nois - 8 + 0.025*vmod*vmod))
-					ints[21] = nois_new
-					fmt.Println("- NOISE:nois", nois, "=>", nois_new)
-					upd_f = true
-					if ints[28] != 0 {  // if vmod != 0 : adjust vmod
-						vmod := float64(int8(ints[28]))  // signed
-						vmod_new := int(math.Round(-1.2 * (1 + vmod)))
-						ints[28] = vmod_new
-						fmt.Println("- NOISE:vmod", vmod, "=>", vmod_new)
-					}
-					if ints[27] != 0 {  // if pmod != 0 : 1/2 strength
-						pmod := int(int8(ints[27]))  // signed
-						pmod_norm := float64(pmod) / 64
-						pmod_sign := math.Copysign(1, pmod_norm)
-						pmod_new := int(math.Round(pmod_sign * math.Sqrt(pmod_norm*pmod_norm / 2) * 64))
-						ints[27] = pmod_new
-						fmt.Println("- NOISE:pmod", pmod, "=>", pmod_new)
-					}
-				}
-				// normalize pitch correction
-				cntr := ints[69]
-				rate := ints[70]
-				span := ints[71]
-				corr := ints[72]
-				vmod := int(int8(ints[73]))
-				vmod_old := vmod
-				corr = 0  // default
-				vmod = -15  // default
-				if span == 0 { rate = 12; cntr = 12; span = 31 }  // defaults
-				if rate < 15 { rate = 12; cntr = 12; span = 31 }  // defaults
-				if cntr != ints[69] { fmt.Println("- PITCH:cntr", ints[69], "=>", cntr); upd_f = true }
-				if rate != ints[70] { fmt.Println("- PITCH:rate", ints[70], "=>", rate); upd_f = true }
-				if span != ints[71] { fmt.Println("- PITCH:span", ints[71], "=>", span); upd_f = true }
-				if corr != ints[72] { fmt.Println("- PITCH:corr", ints[72], "=>", corr); upd_f = true }
-				if vmod != vmod_old { fmt.Println("- PITCH:vmod", vmod_old, "=>", vmod); upd_f = true }
- 				ints[69] = cntr
-				ints[70] = rate
-				ints[71] = span
-				ints[72] = corr
-				ints[73] = vmod
-				// normaize stereo
-				reson_xmix := int(int8(ints[39]))
-				reson_mode = int(int8(ints[40]))
-				if (reson_xmix == 0) && (reson_mode == 0) {  // do stereo defaults
-					reso := int(int8(ints[34]))
-					harm := int(int8(ints[35]))
-					freq := ints[36]
-					tap  := int(int8(ints[37]))
-					hpf  := ints[38]
 					//
-					reso_new := 0
-					harm_new := 17
-					freq_new := 0   // 46Hz
-					tap_new  := 42
-					hpf_new  := 99  // 479Hz
-					mode_new := -2
-					if reso != reso_new { fmt.Println("- RESO:reso", reso, "=>", reso_new); upd_f = true }
-					if harm != harm_new { fmt.Println("- RESO:harm", harm, "=>", harm_new); upd_f = true }
-					if freq != freq_new { fmt.Println("- RESO:freq", freq, "=>", freq_new); upd_f = true }
-					if tap  != tap_new { fmt.Println("- RESO:tap",  tap, "=>", tap_new); upd_f = true }
-					if hpf  != hpf_new { fmt.Println("- RESO:hpf",  hpf, "=>", hpf_new); upd_f = true }
-					if reson_mode != mode_new { fmt.Println("- RESO:mode", reson_mode, "=>", mode_new); upd_f = true }
-					ints[34] = reso_new
-					ints[35] = harm_new
-					ints[36] = freq_new
-					ints[37] = tap_new
-					ints[38] = hpf_new
-					ints[40] = mode_new
+					harm := pints[82]
+					harm_new := 10
+					if harm != harm_new { 
+						pints[82] = harm_new
+						fmt.Println("- PREVIEW:harm", harm, "=>", harm_new) 
+						upd_f = true
+					}
+
+					//
+					pmod := pints[84]
+					pmod_new := -20
+					if pmod != pmod_new { 
+						pints[84] = pmod_new
+						fmt.Println("- PREVIEW:pmod", pmod, "=>", pmod_new) 
+						upd_f = true
+					}
+
+					//
+					mode := pints[85]
+					mode_new := 7
+					if mode != mode_new { 
+						pints[85] = mode_new
+						fmt.Println("- PREVIEW:mode", mode, "=>", mode_new) 
+						upd_f = true
+					}
+				} else {
+					///////////////////////
+					// 2023-01-23 update //
+					///////////////////////
+					////////////////////////
+					// update noise knobs //
+					////////////////////////
+					nois := pints[21]
+					if nois > 0 {  // if nois
+						nois_new := nois + 11
+						if nois_new > 63 { nois_new = 63 }
+						if nois_new < 0 { nois_new = 0 }
+						pints[21] = nois_new
+						fmt.Println("- NOISE:nois", nois, "=>", nois_new)
+						//
+						bass := float64(pints[30])
+						bass_new := math.Round((bass * 2.4) - (bass * bass * 0.033) - 31)
+						if bass_new > 31 { bass_new = 31 }
+						if bass_new < -31 { bass_new = -31 }
+						pints[30] = int(bass_new)
+						fmt.Println("- NOISE:bass", bass, "=>", bass_new)
+						//
+						treb := float64(pints[32])
+						treb_new := 0
+						if treb < 0 {
+							treb_new = int(math.Round((treb * 0.4) + (treb * treb * treb * 0.0004) + 13))
+						} else {
+							treb_new = int(math.Round((treb * 1.3) + 13))
+						}
+						if treb_new > 31 { treb_new = 31 }
+						if treb_new < -31 { treb_new = -31 }
+						pints[32] = treb_new
+						fmt.Println("- NOISE:treb", treb, "=>", treb_new)
+						//
+						mode := pints[24]
+						xmix := pints[31]
+						reso := pints[23]
+						if (mode != 0) && (xmix > 0) && (reso > 0) {
+							reso_new := reso_rescale(reso)
+							if reso != reso_new { 
+								pints[23] = reso_new
+								fmt.Println("- NOISE:reso", reso, "=>", reso_new) 
+							}
+						}
+						upd_f = true
+					}
+					//////////////////////
+					// update osc knobs //
+					//////////////////////
+					osc := pints[0]
+					if osc > 0 {  // if osc
+						mode := pints[11]
+						xmix := pints[20]
+						reso := pints[10]
+						if (mode != 0) && (xmix > 0) && (reso > 0) {
+							reso_new := reso_rescale(reso)
+							if reso != reso_new { 
+								pints[10] = reso_new
+								fmt.Println("- OSC:reso", reso, "=>", reso_new) 
+								upd_f = true
+							}
+						}
+					}
+					///////////////////
+					// update 0_form //
+					///////////////////
+					if (pints[42] != 0) || (pints[56] != 0) {  // either levl nz
+						reso := pints[53]
+						reso_new := reso_rescale(reso)
+						if reso != reso_new { 
+							pints[53] = reso_new
+							fmt.Println("- 0_FORM:reso", reso, "=>", reso_new) 
+							upd_f = true
+						}
+					}				
+					///////////////////
+					// update 1_form //
+					///////////////////
+					if (pints[44] != 0) || (pints[58] != 0) {  // either levl nz
+						reso := pints[54]
+						reso_new := reso_rescale(reso)
+						if reso != reso_new { 
+							pints[54] = reso_new
+							fmt.Println("- 1_FORM:reso", reso, "=>", reso_new) 
+							upd_f = true
+						}
+					}				
+					///////////////////
+					// update 2_form //
+					///////////////////
+					if (pints[46] != 0) || (pints[63] != 0) {  // either levl nz
+						reso := pints[61]
+						reso_new := reso_rescale(reso)
+						if reso != reso_new { 
+							pints[61] = reso_new
+							fmt.Println("- 2_FORM:reso", reso, "=>", reso_new) 
+							upd_f = true
+						}
+					}				
+					///////////////////
+					// update 3_form //
+					///////////////////
+					if (pints[60] != 0) || (pints[65] != 0) {  // either levl nz
+						reso := pints[68]
+						reso_new := reso_rescale(reso)
+						if reso != reso_new { 
+							pints[68] = reso_new
+							fmt.Println("- 3_FORM:reso", reso, "=>", reso_new) 
+							upd_f = true
+						}
+					}				
+					/////////////////
+					// update fall //
+					/////////////////
+					if (pints[76] != 0) {  // fall
+						fall := pints[76]
+						fall_new := reso_rescale(fall)
+						if fall != fall_new { 
+							pints[76] = fall_new
+							fmt.Println("- VOLUME:fall", fall, "=>", fall_new) 
+							upd_f = true
+						}
+					}				
+
+					/*
+					///////////////////////
+					// 2023-01-01 update //
+					///////////////////////
+					//////////////////////////////////////////////
+					// update all formant levels (if necessary) //
+					//////////////////////////////////////////////
+					levls := []int{
+						pints[42], 
+						pints[44], 
+						pints[46], 
+						pints[56], 
+						pints[58], 
+						pints[60], 
+						pints[63], 
+						pints[65] }
+					min := 0
+					max := 0
+					for _, levl := range levls {
+						if levl > max { max = levl }
+						if levl < min { min = levl }
+					}
+					abs_max := max
+					if -min > max { abs_max = -min }
+					////////////////////////////////////
+					// only update if formants in use //
+					////////////////////////////////////
+					if abs_max != 0 {
+						delta := 8  // +6dB
+						if abs_max + delta > 63 { delta = 63 - abs_max }
+						if delta < 8 { 
+							fmt.Println("- FORM:delta", delta) 
+						}
+						if delta != 0 {
+							for idx, _ := range levls {
+								if levls[idx] < 0 { 
+									levls[idx] -= delta
+								} else if levls[idx] > 0 { 
+									levls[idx] += delta 
+								}
+							}
+							fmt.Println("- FORM:levl", levls)
+							pints[42] = levls[0]
+							pints[44] = levls[1]
+							pints[46] = levls[2]
+							pints[56] = levls[3]
+							pints[58] = levls[4]
+							pints[60] = levls[5]
+							pints[63] = levls[6]
+							pints[65] = levls[7]
+							upd_f = true
+						}
+						////////////////////////////////////////////
+						// update reson xmix level (if necessary) //
+						////////////////////////////////////////////
+						xmix := pints[39]  // signed
+						mode := pints[40]  // signed
+						if (mode <= 0) && (xmix != 0) && (delta < 8) {
+							db_ratio := math.Pow(10, ((float64(delta)-8)*3/4)/20)
+							xm_norm := float64(xmix) / 64
+							xm_sign := math.Copysign(1, xm_norm)
+							xm_abs := xm_sign * xm_norm
+							xm_ratio := xm_abs / (1 + xm_abs)
+							xm_ratio_new := xm_ratio * db_ratio
+							xmix_new := int(math.Round(64 * xm_sign * xm_ratio_new / (1 - xm_ratio_new)))
+							pints[39] = xmix_new
+							fmt.Println("- RESON:xmix", xmix, "=>", xmix_new)
+							upd_f = true
+						}
+					}
+					//////////////////////////////////////
+					// update reson mode (if necessary) //
+					//////////////////////////////////////
+					reson_mode := pints[40]  // signed
+					if reson_mode != 0 {
+						mode_new := -reson_mode
+						pints[40] = mode_new
+						fmt.Println("- RESON:mode", reson_mode, "=>", mode_new)
+						upd_f = true
+					}
+					////////////////////////
+					// update noise knobs //
+					////////////////////////
+					if pints[21] == 0 {  // if nois[0] kill everything
+						nz_f := false
+						for idx, levl := range pints {
+							if (idx >= 22) && (idx <= 33) { 
+								if levl != 0 { 
+									nz_f = true
+									pints[idx] = 0
+								}
+							}
+						}
+						if nz_f { 
+							fmt.Println("- NOISE:all: => 0")
+							upd_f = true 
+						}
+					} else { // adjust nois
+						nois := float64(pints[21])
+						vmod := float64(pints[28])
+						nois_new := int(math.Round(nois - 8 + 0.025*vmod*vmod))
+						if nois_new > 63 { nois_new = 63 }
+						if nois_new < 0 { nois_new = 0 }
+						pints[21] = nois_new
+						fmt.Println("- NOISE:nois", nois, "=>", nois_new)
+						upd_f = true
+						if pints[28] != 0 {  // if vmod != 0 : adjust vmod
+							vmod := float64(pints[28])
+							vmod_new := int(math.Round(-1.2 * (1 + vmod)))
+							pints[28] = vmod_new
+							fmt.Println("- NOISE:vmod", vmod, "=>", vmod_new)
+						}
+						if pints[27] != 0 {  // if pmod != 0 : 1/2 strength
+							pmod := pints[27]
+							pmod_norm := float64(pmod) / 64
+							pmod_sign := math.Copysign(1, pmod_norm)
+							pmod_new := int(math.Round(pmod_sign * math.Sqrt(pmod_norm*pmod_norm / 2) * 64))
+							pints[27] = pmod_new
+							fmt.Println("- NOISE:pmod", pmod, "=>", pmod_new)
+						}
+					}
+					////////////////////////////////
+					// normalize pitch correction //
+					////////////////////////////////
+					cntr := pints[69]
+					rate := pints[70]
+					span := pints[71]
+					corr := pints[72]
+					vmod := pints[73]
+					vmod_old := vmod
+					corr = 0  // default
+					vmod = -15  // default
+					if span == 0 { rate = 12; cntr = 12; span = 31 }  // defaults
+					if rate < 15 { rate = 12; cntr = 12; span = 31 }  // defaults
+					if cntr != pints[69] { fmt.Println("- PITCH:cntr", pints[69], "=>", cntr); upd_f = true }
+					if rate != pints[70] { fmt.Println("- PITCH:rate", pints[70], "=>", rate); upd_f = true }
+					if span != pints[71] { fmt.Println("- PITCH:span", pints[71], "=>", span); upd_f = true }
+					if corr != pints[72] { fmt.Println("- PITCH:corr", pints[72], "=>", corr); upd_f = true }
+					if vmod != vmod_old { fmt.Println("- PITCH:vmod", vmod_old, "=>", vmod); upd_f = true }
+					pints[69] = cntr
+					pints[70] = rate
+					pints[71] = span
+					pints[72] = corr
+					pints[73] = vmod
+					/////////////////////
+					// normaize stereo //
+					/////////////////////
+					reson_xmix := pints[39]
+					reson_mode = pints[40]
+					if (reson_xmix == 0) && (reson_mode == 0) {  // do stereo defaults
+						reso := pints[34]
+						harm := pints[35]
+						freq := pints[36]
+						tap  := pints[37]
+						hpf  := pints[38]
+						//
+						reso_new := 0
+						harm_new := 17
+						freq_new := 0   // 46Hz
+						tap_new  := 42
+						hpf_new  := 99  // 479Hz
+						mode_new := -2
+						if reso != reso_new { fmt.Println("- RESO:reso", reso, "=>", reso_new); upd_f = true }
+						if harm != harm_new { fmt.Println("- RESO:harm", harm, "=>", harm_new); upd_f = true }
+						if freq != freq_new { fmt.Println("- RESO:freq", freq, "=>", freq_new); upd_f = true }
+						if tap  != tap_new { fmt.Println("- RESO:tap",  tap, "=>", tap_new); upd_f = true }
+						if hpf  != hpf_new { fmt.Println("- RESO:hpf",  hpf, "=>", hpf_new); upd_f = true }
+						if reson_mode != mode_new { fmt.Println("- RESO:mode", reson_mode, "=>", mode_new); upd_f = true }
+						pints[34] = reso_new
+						pints[35] = harm_new
+						pints[36] = freq_new
+						pints[37] = tap_new
+						pints[38] = hpf_new
+						pints[40] = mode_new
+					}
+					*/
 				}
 			}
 			// write back
 			if upd_f {
-				hexs := ints_to_hexs(ints, 4)
+				hexs := ints_to_hexs(pints, 4)
 				if !dry { err = os.WriteFile(file_path, []byte(hexs), 0666); if err != nil { log.Fatal(err) } }
 				fmt.Println("")
 				upd_cnt++
@@ -692,6 +1054,41 @@ func update_dlp(dir string, pro bool, dry bool) {
     }
 	fmt.Println("> updated", upd_cnt, "of", dlp_cnt, "DLP files in", dir, "directory")
 	if dry { fmt.Println("\n- DRY RUN, NO FILES UPDATED - (use -dry=false to update)\n") }
+}
+
+
+
+///////////
+// morph //
+///////////
+
+// add scaled normal random value, reflect as necessary until inside limits
+func pint_rnd_refl(pint, min, max, mult int) (int) {
+	scale := float64(mult) * float64(max - min) / 64
+	rnd := int(math.Round(scale * rand.NormFloat64()))
+	pint += rnd
+	for (pint < min) || (pint > max) {
+		if pint < min { pint = 2*min - pint }
+		if pint > max { pint = 2*max - pint }
+	}
+	return pint
+}
+
+// morph most oscillator settings, all filter freqs, some resonator settings
+func morph_pints(pints []int, mo, mn, me, mf, mr int) ([]int) {
+	morph := func(m_pidx []int, mult int) ([]int) {
+		for _, pidx := range m_pidx {
+			ptype := pre_params[pidx].ptype;
+			pints[pidx] = pint_rnd_refl(pints[pidx], ptype_min(ptype), ptype_max(ptype), mult) 
+		}
+		return pints
+	}
+	pints = morph([]int{ 1, 2, 6, 7, 8, 16, 17, 18, 19 }, mo)
+	pints = morph([]int{ 29, 33 }, mn)
+	pints = morph([]int{ 14, 15, 30, 32 }, me)
+	pints = morph([]int{ 41, 55, 43, 57, 45, 62, 59, 64,  9, 22 }, mf)
+	pints = morph([]int{ 35, 36, 37 }, mr)
+	return pints
 }
 
 
@@ -725,6 +1122,7 @@ func find_dlp(dir string) {
 	dir = filepath.Clean(dir)
 	files, err := os.ReadDir(dir); if err != nil { log.Fatal(err) }
 	dlp_cnt := 0
+	find_cnt := 0
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".dlp" && !file.IsDir() {
 			dlp_cnt++
@@ -732,94 +1130,44 @@ func find_dlp(dir string) {
 			file_path := filepath.Join(dir, file_name)
 			// read in
 			file_bytes, err := os.ReadFile(file_path); if err != nil { log.Fatal(err) }
-			ints := hexs_to_ints(string(file_bytes), 4)
-
-			if ints[39] == 0 {
-				fmt.Println("xmix", int8(ints[39]))
-				fmt.Println("mode", int8(ints[40]))
-				fmt.Println("tap ", int8(ints[37]))
-				fmt.Println("harm", int8(ints[35]))
-				fmt.Println("reso", int8(ints[34]))
-				fmt.Println("freq", ints[36], reson_freq(ints[36]))
-				fmt.Println("hpf ", ints[38], filt_freq(ints[38]))
+			pints := pints_signed(hexs_to_ints(string(file_bytes), 4), false)
+			/*
+			if pints[95] != 0 {  // cvol
+				fmt.Println("cvol", pints[95])
 				fmt.Println("-", file.Name(), "\n")
+				find_cnt++
 			}
-
-
-/*
-			// formant levels
-			levls := []int{  // signed
-				int(int8(ints[42])), 
-				int(int8(ints[44])), 
-				int(int8(ints[46])), 
-				int(int8(ints[56])), 
-				int(int8(ints[58])), 
-				int(int8(ints[60])), 
-				int(int8(ints[63])), 
-				int(int8(ints[65])) }
-			// formant resonances
-			resos := []int{  // unsigned
-				ints[53],
-				ints[54],
-				ints[61],
-				ints[68] }
-			fmt.Println("osc ", ints[0])
-			fmt.Println("levl", levls)
-			fmt.Println("reso", resos)
-			fmt.Println("nois", ints[21])
-			fmt.Println("-", file.Name(), "\n")
-*/
-/*
-			// PITCH:corr[72], PITCH:vmod[73]
-			if ints[72] > 0 { 
-				fmt.Println(">", file, "corr", ints[72], "vmod", ints[73])
+			*/
+			/*
+//			if pints[21] != 0 && pints[32] > 0 {  // nois
+//			if pints[21] != 0 && pints[30] < 0 {  // nz nois & neg bass
+			if pints[21] > 52 {  // nois > 52
+//				fmt.Println("treb", pints[32])
+//				fmt.Println("bass", pints[30])
+				fmt.Println("nois", pints[21])
+				fmt.Println("-", file.Name(), "\n")
+				find_cnt++
 			}
-*/
-/*
-			cntr := ints[69]
-			rate := ints[70]
-			span := ints[71]
-			corr := ints[72]
-			vmod := int(int8(ints[73]))
-			pitch := []int{ corr, rate, cntr, vmod, span }
-			flag := "***"
-			if corr != 0 { corr = 0 }
-			if span == 0 { rate = 12; cntr = 12; vmod = -15; span = 31 }
-			if rate < 15 { rate = 12; cntr = 12; vmod = -15; span = 31 }
-			new := []int{ corr, rate, cntr, vmod, span }
-			for i, old := range pitch {
-				if old != new[i] { flag = "" }
+			*/
+			/*
+			// pitch preview:
+			{0x31, "prev", "pp_p0_ds"},	// 81
+			{0xc5, "harm", "pp_p1_ds"},	// 82
+			{0xa7, "oct ", "pp_p2_ds"},	// 83
+			{0xca, "pmod", "pp_p3_ds"},	// 84
+			{0x0b, "mode", "pp_p4_ds"},	// 85
+			{0xc5, "treb", "pp_p5_ds"},	// 86
+			{0xc5, "bass", "pp_p6_ds"},	// 87
+			*/
+			if pints[81] != 0 {  // prev != 0
+				fmt.Println("prev", pints[81])
+				fmt.Println("mode", pints[85])
+				fmt.Println("-", file.Name(), "\n")
+				find_cnt++
 			}
-			fmt.Println(dlp_cnt, pitch, new, file_name, flag)
-*/
-/*
-			cntr := ints[69]
-			rate := ints[70]
-			span := ints[71]
-			corr := ints[72]
-			vmod := int(int8(ints[73]))
-			pitch := []int{ corr, rate, cntr, vmod, span }
-			fmt.Println(dlp_cnt, pitch, file_name)
-*/
-/*
-			// NOISE:nois[21], vmod[28], pmod[27]
-			if ints[28] != 0 { 
-				fmt.Println("nois", ints[21], "vmod", int(int8(ints[28])), "pmod", int(int8(ints[27])), file.Name())
-			}
-*/			
-/*
-			// NOISE:nois[21], the rest [22:33]
-			if ints[21] == 0 { 
-				for idx, levl := range ints {
-					if (idx >= 22) && (idx <= 33) { 
-						if levl != 0 { 
-							fmt.Println("idx:", idx, "levl:", levl, ":", file.Name())
-						}
-					}
-				}
-			}
-*/
 		}
     }
+	fmt.Println("> examined", dlp_cnt, "DLP files")
+	fmt.Println("> found", find_cnt, "instances")
 }
 
