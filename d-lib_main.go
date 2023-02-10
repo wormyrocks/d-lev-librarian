@@ -52,6 +52,7 @@ func main() {
 			case "morph": morph(port)
 			case "update": update()  // update stuff
 			case "dev": dev()  // dev stuff
+			case "webui": webui()
 			default: log.Fatalln("> Unknown command:", os.Args[1])
 		}
 	}
@@ -502,4 +503,13 @@ func dev() {
 	//
 	find_dlp(*dir)
 
+}
+
+///////////
+// webui //
+///////////
+
+func webui() {
+	// Trigger Librarian functions via browser binding
+	webui_init()
 }

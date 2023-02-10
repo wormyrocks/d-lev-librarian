@@ -6,20 +6,35 @@
     "tasks": [
         {
             "command": "go",
-            "label": "install",
+            "label": "Install dependencies",
             "args": [
                 "install",
                 "-v",
                 "./..."
             ],
-            "group": "build"
+            "group": "build",
+            "problemMatcher": []
         },
         {
             "command": "go",
-            "label": "run",
+            "label": "Run without GUI",
             "args": [
                 "run",
                 "${workspaceFolder}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "command": "go",
+            "label": "Run with GUI",
+            "args": [
+                "run",
+                "${workspaceFolder}",
+                "webui"
             ],
             "group": {
                 "kind": "build",
