@@ -1,4 +1,4 @@
-<!DOCTYPE html> <html> <head> <title>Title</title> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1"> </head> <body> <button id="search_button">Add 2</button><br> <span id="response_box">0</span> </body> <script>window.onload = function() {
+window.onload = function() {
     let num = 0
     searchButton = document.getElementById("search_button");
     responseBox = document.getElementById("response_box");
@@ -9,4 +9,4 @@
         console.log(num);
         responseBox.innerText = num
     })});
-};</script> </html>
+};

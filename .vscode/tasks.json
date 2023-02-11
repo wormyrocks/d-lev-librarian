@@ -36,6 +36,7 @@
                 "${workspaceFolder}",
                 "webui"
             ],
+            "dependsOn": "Build WebUI",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -43,7 +44,12 @@
             "problemMatcher": []
         },
         {
-            "label": "buildall",
+            "label": "Build WebUI",
+            "command": "webui/build_webui.sh",
+            "group": "build"
+        }
+        {
+            "label": "Build all",
             "command": "./build_all.sh",
             "group": "build"
         }

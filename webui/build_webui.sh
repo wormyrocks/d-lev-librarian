@@ -10,4 +10,4 @@ command -v inliner > /dev/null || {
     echo "More information: https://github.com/remy/inliner"
     echo "Press Enter to continue without building the UI, or Ctrl+C to quit."
     read -n 1
-} && inliner index.html > build/compiled_webapp.html
+} && inliner -m index.html > build/compiled_webapp.html
