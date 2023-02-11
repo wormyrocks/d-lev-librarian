@@ -1,3 +1,5 @@
+//go:build webui
+
 package main
 
 import (
@@ -7,6 +9,7 @@ import (
 )
 
 const do_webview_debug = true
+
 
 /*
   We don't want to run a local web server because of Windows permissions issues:
@@ -27,7 +30,7 @@ func addTwo_(s int) int {
 	return s + 2
 }
 
-func webui_init() {
+func start_ui() {
 	fmt.Println("hello world")
 	w := webview.New(do_webview_debug)
 	defer w.Destroy()

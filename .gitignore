@@ -22,3 +22,9 @@ go.work
 
 # Binaries (include in releases instead)
 bin/
+
+d-lib.cfg
+d-mac
+d-win.exe
+d-mm1
+d-lin

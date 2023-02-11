@@ -25,7 +25,6 @@ Commands & Flags:
   morph <-k|-s slot|-f file> <-mo|n|e|f|r|-seed>  morph knobs|slot|DLP file to knobs
   hcl   <ver|crc|acal|22 rk|...>                  issue HCL command**
   loop  <"loop text">                             serial port loop back test***
-  webui                                           Launch with GUI
 `
 
 var help_verbose_str = `

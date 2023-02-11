@@ -18,7 +18,6 @@ import (
 )
 
 func main() {
-
 	// init from config file
 	port, err := strconv.Atoi(cfg_get("port"))
 	if err != nil { 
@@ -52,7 +51,7 @@ func main() {
 			case "morph": morph(port)
 			case "update": update()  // update stuff
 			case "dev": dev()  // dev stuff
-			case "webui": webui()
+			case "ui": start_ui()
 			default: log.Fatalln("> Unknown command:", os.Args[1])
 		}
 	}
@@ -503,13 +502,4 @@ func dev() {
 	//
 	find_dlp(*dir)
 
-}
-
-///////////
-// webui //
-///////////
-
-func webui() {
-	// Trigger Librarian functions via browser binding
-	webui_init()
 }

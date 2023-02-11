@@ -34,7 +34,7 @@
             "args": [
                 "run",
                 "${workspaceFolder}",
-                "webui"
+                "ui"
             ],
             "dependsOn": "Build WebUI",
             "group": {
