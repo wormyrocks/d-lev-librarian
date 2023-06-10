@@ -1,11 +1,10 @@
 package main
 
 /*
- * d-lev support functions
+ * d-lib support functions
 */
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,6 +12,22 @@ import (
 	"strings"
 	"strconv"
 )
+
+func dir_exists_chk(dir string) (bool) {
+	dir = filepath.Clean(dir)
+    _, err := os.Stat(dir)
+    if os.IsNotExist(err) { return false }
+    return true
+}
+
+// create directory for file if directory does not exist.
+func file_make_dir(file string) {
+	dir, _ := filepath.Split(file)
+	dir = filepath.Clean(dir)
+	if dir == "" { return }
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {	log.Println(err) }
+}
 
 // check for blank <file> name
 func file_blank_chk(file string) {
@@ -33,14 +48,23 @@ func file_ext_chk(file string, ext string) (string) {
 }
 
 // check if <file> exists, prompt to overwrite
-func file_exists_chk(file string) {
+func file_write_chk(file string, yes bool) (bool) {
     _, err := os.Stat(file)
     if !errors.Is(err, os.ErrNotExist) {
-		fmt.Print("> Overwrite file ", file, " ?  <y|n> ")
-		var input string
-		fmt.Scanln(&input)
-		if input != "y" { log.Fatalln("> Abort, exiting program...") }
+		return user_prompt("Overwrite file " + file + "?", yes)
 	}
+	return true
+}
+
+// write bytes to file
+func file_write(file string, data []byte, yes bool) (bool) {
+	if file_write_chk(file, yes) {
+		file_make_dir(file)
+		err := os.WriteFile(file, data, 0666); 
+		if err != nil { log.Fatal(err) }
+		return true
+	}
+	return false
 }
 
 // get contents of <file>.<ext>, check & add extension if needed
@@ -65,106 +89,6 @@ func get_dir_strs(dir, ext string) ([]string, []string) {
 		}
     }
     return name_strs, data_strs
-}
-
-// split file containers into sub containers
-func split_file(file string) {
-	file_blank_chk(file)
-	dir, file_name := filepath.Split(file)
-	dir = filepath.Clean(dir)
-	ext := filepath.Ext(file_name)
-	base_name := strings.TrimSuffix(file_name, ext)
-	switch ext {
-		case ".pre", ".pro", ".eeprom" : // these are OK
-		default : log.Fatalln("> Unknown file extension", ext)
-	}
-	file_bytes, err := os.ReadFile(file); if err != nil { log.Fatal(err) }
-	str_split := (strings.Split(strings.TrimSpace(string(file_bytes)), "\n"))
-	if ext == ".eeprom" {
-		var pre_str string
-		var pro_str string
-		var spi_str string
-		for line, str := range str_split {
-			if line < PRE_SLOTS*SLOT_BYTES/4 { 
-				pre_str += str + "\n"
-			} else if line < SLOTS*SLOT_BYTES/4 { 
-				pro_str += str + "\n"
-			} else { 
-				spi_str += str + "\n"
-			}
-		}
-		pre_name := base_name + ".pre"
-		pro_name := base_name + ".pro"
-		spi_name := base_name + ".spi"
-		//
-		pre_file := filepath.Join(dir, pre_name)
-		pro_file := filepath.Join(dir, pro_name)
-		spi_file := filepath.Join(dir, spi_name)
-		file_exists_chk(pre_file)
-		err = os.WriteFile(pre_file, []byte(pre_str), 0666); if err != nil { log.Fatal(err) }
-		file_exists_chk(pro_file)
-		err = os.WriteFile(pro_file, []byte(pro_str), 0666); if err != nil { log.Fatal(err) }
-		file_exists_chk(spi_file)
-		err = os.WriteFile(spi_file, []byte(spi_str), 0666); if err != nil { log.Fatal(err) }
-		fmt.Println("> split", file, "to", pre_name, pro_name, spi_name )
-	} else {  // pre | pro
-		var dlp_str string
-		file_num := 0
-		for line, str := range str_split {
-			dlp_str += str + "\n"
-			if line % 64 == 63 { 
-				dlp_name := fmt.Sprintf("%03d", file_num) + ".dlp"
-				if ext == ".pro" { dlp_name = "pro_" + dlp_name }
-				pre_file := filepath.Join(dir, dlp_name)
-				err = os.WriteFile(pre_file, []byte(dlp_str), 0666); if err != nil { log.Fatal(err) }
-				file_num++
-				dlp_str = ""
-			}
-		}
-		fmt.Println("> split", file, "to", file_num, "numbered *.dlp files" )
-	}
-}
-
-// join sub containers to container
-func join_files(file string) {
-	file_blank_chk(file)
-	dir, file_name := filepath.Split(file)
-	dir = filepath.Clean(dir)
-	ext := filepath.Ext(file_name)
-	switch ext {
-		case ".pre", ".pro", ".eeprom" : // these are OK
-		default : log.Fatalln("> Unknown file extension", ext)
-	}
-	file_exists_chk(file)
-	base_name := strings.TrimSuffix(file_name, ext)
-	if ext == ".eeprom" {
-		pre_name := base_name + ".pre"
-		pro_name := base_name + ".pro"
-		spi_name := base_name + ".spi"
-		pre_file := filepath.Join(dir, pre_name)
-		pro_file := filepath.Join(dir, pro_name)
-		spi_file := filepath.Join(dir, spi_name)
-		pre_bytes, err := os.ReadFile(pre_file); if err != nil { log.Fatal(err) }
-		pro_bytes, err := os.ReadFile(pro_file); if err != nil { log.Fatal(err) }
-		spi_bytes, err := os.ReadFile(spi_file); if err != nil { log.Fatal(err) }
-		wr_bytes := append(pre_bytes, pro_bytes...)
-		wr_bytes = append(wr_bytes, spi_bytes...)
-		err = os.WriteFile(file, wr_bytes, 0666); if err != nil { log.Fatal(err) }
-		fmt.Println("> merged", pre_name, pro_name, spi_name, "to", file )
-	} else {  // pre | pro
-		var wr_bytes []byte
-		files := PRE_SLOTS
-		if ext == ".pro" { files = PRO_SLOTS }
-		for file_num := 0; file_num < files; file_num++ {
-			dlp_name := fmt.Sprintf("%03d", file_num) + ".dlp"
-			if ext == ".pro" { dlp_name = "pro_" + dlp_name }
-			rd_file := filepath.Join(dir, dlp_name)
-			rd_bytes, err := os.ReadFile(rd_file); if err != nil { log.Fatal(err) }
-			wr_bytes = append(wr_bytes, rd_bytes...)
-		}
-		err := os.WriteFile(file, wr_bytes, 0666); if err != nil { log.Fatal(err) }
-		fmt.Println("> joined", files, "numbered *.dlp files", "to", file)
-	}
 }
 
 // return a file map for a given directory

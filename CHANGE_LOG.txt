@@ -9,11 +9,77 @@
 - Windows: GOOS=windows GOARCH=amd64 go build -o d-win.exe
 - Mac:     GOOS=darwin GOARCH=amd64 go build -o d-mac
 - Mac M1:  GOOS=darwin GOARCH=arm64 go build -o d-mm1
+- ARM64:   GOOS=linux GOARCH=arm64 go build -o d-arm
+- ARM32:   GOOS=linux GOARCH=arm go build -o d-a32
+
+- build_all.sh : all of the above
+- build.sh     : just Linux (for my dev.)
 
 ////////////////
 // CHANGE LOG //
 ////////////////
-2023-01-31 : v6
+2023-06-00 : v7
+- fmt.Scanln() stops consuming at first space, leaving stuff in the buffer.
+- Replaced with user_word() using bufio.NewScanner(os.Stdin) & .Scan().
+
+2023-06-08 : v7
+- Still more work on the update menu.
+
+2023-06-06 : v7
+- Command menu => update.
+
+2023-06-05 : v7
+- Command update => menu.
+- New file "lib_time.go".
+
+2023-06-03 : v7
+- update command walks user thru the steps.
+- New file "lib_cmd.go" contains most main() code.
+
+2023-06-01 : v7
+- Removed stob command, expanded match command.
+- batch command -r (=> Rob S.) tweaked w/ Rob here.
+- batch command -m (=> mono) fixed.
+- batch command -s (=> stereo) removed.
+
+2023-05-28 : v7
+- batch command for DLP batch processing.
+- Added -y flag to all file writing commands to bypass <y|n> prompt (for scripting, h/t Craig).
+- Added directory check & creation for commands ktof, stof, dump.
+- Funneled most file writes through file_write().
+
+2023-05-17 : v7
+- diff command can compare two slots, knobs to slot
+- stob command flag: -i => -g (guess)
+
+2023-05-15 : v7
+- match command flag: -i => -g (guess)
+- knob command flag: -i => -o (offset)
+
+2023-05-11b : v7
+- update command now fixes preview knobs.
+
+2023-05-11 : v7
+- Edited to reflect pitch preview changes:
+- pp_p5 : "treb" type 0xc5 => "tone" type 0xc5
+- pp_p6 : "bass" type 0xc5 => "vmod" type 0xca
+
+2023-05-10 : v7
+- slots => "match": match slots or dir to dir of *.dlp files.
+- knob command flag -k combines page_name:knob_number; -p flag removed.
+- slots command: removed use of file map when -inf=false.
+
+2023-05-09b : v7
+- New knob command to read, +/-, set value of knob.
+- morph seed flag: -seed => -i
+- slots infer flag: -inf => -i
+- stob infer flag: -inf => -i
+- stob header flag: -hdr => -h
+
+2023-03-13 : v7
+- Build now targets ARM32 & 64 bit Linux OS (32 bit tested on RPI4).
+
+2023-01-31 : v6 - RELEASED -
 - Command morph now has -mo, -mn, -me -mf, -mr scalings, -seed assignment.
 - Command slots column width now adapts to file name lengths.
 
@@ -23,7 +89,7 @@
 2023-01-28 : v6
 - New join command.
 - Update command now skips blank files.
-- Bug: ints_to_hexs was incorrectly trimming last '\n' leading to bad DLP concat.
+- Bug: ints_to_hexs was incorrectly trimming last '\n' => bad DLP concat.
 
 2023-01-25 : v6
 - Changes to reflect SW update.

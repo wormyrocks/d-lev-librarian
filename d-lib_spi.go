@@ -114,16 +114,16 @@ func spi_slot_addr(slot int, mode string) (int) {
 
 // trim command, address, and prompt cruft from hcl read string
 func decruft_hcl(str_i string) (string) {
-	split_strs := strings.Split(strings.TrimSpace(str_i), "\n")
-	var str_all string
-	for _, line_str := range split_strs {
-		line_str := strings.TrimSpace(line_str)
-		idx := strings.Index(line_str, "]")
-		if idx >= 0 { 
-			str_all += line_str[idx+1:] + "\n" 
+	lines_i := strings.Split(strings.TrimSpace(str_i), "\n")
+	lines_o := ""
+	for idx, line := range lines_i {
+		if (idx != 0) && (idx != len(lines_i) - 1) {
+			line := strings.TrimSpace(line)
+			addr_end := strings.Index(line, "]")
+			lines_o += line[addr_end+1:] + "\n" 
 		}
 	}
-	return strings.TrimSpace(str_all)
+	return strings.TrimSpace(lines_o)
 }
 
 // get single slot data string

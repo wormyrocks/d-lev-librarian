@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	VERSION = "6"										// librarian version
+	VERSION = "7"										// librarian version
 	//
 	SLOTS = 256											// pre + pro slots
 	SLOT_BYTES = 256									// bytes per slot
@@ -36,18 +36,20 @@ const (
 	EE_WR_MS = 6										// eeprom write wait time (ms)
 	//
 	UI_PAGES = 20										// ui pages
-	UI_COLS = 2											// ui page columns
-	UI_ROWS = 4											// ui page rows
-	UI_KNOBS = UI_COLS * UI_ROWS						// ui knobs
+	UI_PG_COLS = 2										// ui page columns
+	UI_PG_ROWS = 4										// ui page rows
+	UI_PG_KNOBS = UI_PG_COLS * UI_PG_ROWS				// ui page knobs
 	UI_PAGE_KNOB = 7									// ui page selector knob
 	UI_PRN_PG_COLS = 4									// ui print pages columns
 	UI_PRN_PG_ROWS = 5									// ui print pages rows
-	KNOBS = UI_KNOBS * UI_PAGES							// total knobs
+	KNOBS = UI_PG_KNOBS * UI_PAGES						// total knobs
 	//
 	RX_BUF_BYTES = 512									// serial port rx buffer size
 	CHARS_PER_DOT = 4096								// chars for each activity dot printed
 	CFG_FILE = "d-lib.cfg"								// config file name
 	CFG_PORT = 0										// default port
+	//
+	CRC = "debb20e3"									// good CRC
 )
 
 // convert string of multi-byte hex values to slice of ints

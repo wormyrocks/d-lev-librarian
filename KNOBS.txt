@@ -17,12 +17,12 @@ knob     hex      label    range    page title
 13       0D       Bass     -31:31   
 14       0E       nois     0:63     
 15       0F       -        0:19     
-16       10       mode     0:11     PREVIEW
+16       10       vmod     0:11     PREVIEW
 17       11       pmod     -63:63   
 18       12       prev     -63:63     
-19       13       treb     -31:31   
+19       13       mode     0:11
 20       14       harm     -31:31   
-21       15       bass     -31:31   
+21       15       tone     -31:31   
 22       16       oct      -7:7     
 23       17       -        0:19     
 24       18       vloc     0:63     MIDI
