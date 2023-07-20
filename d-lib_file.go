@@ -10,14 +10,13 @@ import (
 	"path/filepath"
 	"errors"
 	"strings"
-	"strconv"
 )
 
-func dir_exists_chk(dir string) (bool) {
-	dir = filepath.Clean(dir)
-    _, err := os.Stat(dir)
-    if os.IsNotExist(err) { return false }
-    return true
+// check if dir or file exists
+func path_exists_chk(path string) (bool) {
+	path = filepath.Clean(path)
+    _, err := os.Stat(path)
+	return !errors.Is(err, os.ErrNotExist)
 }
 
 // create directory for file if directory does not exist.
@@ -47,35 +46,41 @@ func file_ext_chk(file string, ext string) (string) {
 	return file
 }
 
+// check if <file><ext> exists, check & add extension if needed
+func file_read_chk(file, ext string) (string) {
+	file_blank_chk(file)
+	file = file_ext_chk(file, ext)
+    if !path_exists_chk(file) { log.Fatal("> File ", file, " does not exist!") }
+	return file
+}
+
 // check if <file> exists, prompt to overwrite
 func file_write_chk(file string, yes bool) (bool) {
-    _, err := os.Stat(file)
-    if !errors.Is(err, os.ErrNotExist) {
+	file_blank_chk(file)
+    if path_exists_chk(file) {
 		return user_prompt("Overwrite file " + file + "?", yes)
 	}
 	return true
 }
 
-// write bytes to file
-func file_write(file string, data []byte, yes bool) (bool) {
+// write trimmed string to checked file
+func file_write_str(file, data string, yes bool) (bool) {
 	if file_write_chk(file, yes) {
 		file_make_dir(file)
-		err := os.WriteFile(file, data, 0666); 
+		err := os.WriteFile(file, []byte(strings.TrimSpace(data)), 0666); 
 		if err != nil { log.Fatal(err) }
 		return true
 	}
 	return false
 }
 
-// get contents of <file>.<ext>, check & add extension if needed
-func get_file_str(file, ext string) (string, string) {
-	file_blank_chk(file)
-	file = file_ext_chk(file, ext)
+// read trimmed string from file
+func file_read_str(file string) (string) {
 	file_bytes, err := os.ReadFile(file); if err != nil { log.Fatal(err) }
-	return file, string(file_bytes)
+	return strings.TrimSpace(string(file_bytes))
 }
 
-// get name and contents of all *.<ext> files in <dir>
+// get name and contents of all *<ext> files in <dir>
 func get_dir_strs(dir, ext string) ([]string, []string) {
 	var name_strs []string
 	var data_strs []string
@@ -83,9 +88,9 @@ func get_dir_strs(dir, ext string) ([]string, []string) {
 	files, err := os.ReadDir(dir); if err != nil { log.Fatal(err) }
 	for _, file := range files {
 		if (filepath.Ext(file.Name()) == ext) && (file.IsDir() == false) {
-			file_bytes, err := os.ReadFile(filepath.Join(dir, file.Name())); if err != nil { log.Fatal(err) }
+			file_str := file_read_str(filepath.Join(dir, file.Name()))
 			name_strs = append(name_strs, strings.TrimSuffix(file.Name(), ext))
-			data_strs = append(data_strs, string(file_bytes))
+			data_strs = append(data_strs, file_str)
 		}
     }
     return name_strs, data_strs
@@ -100,8 +105,8 @@ func map_files(dir string, ext string) (map[string]string) {
 	files, err := os.ReadDir(dir); if err != nil { log.Fatal(err) }
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ext && file.IsDir() == false {
-			file_bytes, err := os.ReadFile(filepath.Join(dir, file.Name())); if err != nil { log.Fatal(err) }
-			f_map[strings.TrimSpace(string(file_bytes))] = strings.TrimSuffix(file.Name(), ext)
+			file_str := file_read_str(filepath.Join(dir, file.Name()))
+			f_map[file_str] = strings.TrimSuffix(file.Name(), ext)
 		}
     }
     return f_map
@@ -114,38 +119,34 @@ func map_files(dir string, ext string) (map[string]string) {
 
 // set key value in config file
 // create file if it doesn't exist
-func cfg_set(key string, value string) {
-    _, err := os.Stat(CFG_FILE)
-    if errors.Is(err, os.ErrNotExist) {  // missing
-		err = os.WriteFile(CFG_FILE, []byte(""), 0666); if err != nil { log.Fatal(err) }
+func cfg_set(key, value string) {
+	if !path_exists_chk(CFG_FILE) {	 // create file
+		file_write_str(CFG_FILE, "", true) 
 	}
-	bytes, err := os.ReadFile(CFG_FILE); if err != nil { log.Fatal(err) }
-	lines := (strings.Split(strings.TrimSpace(string(bytes)), "\n"))
+	key = strings.TrimSpace(key)
+	value = strings.TrimSpace(value)
+	file_str := file_read_str(CFG_FILE)
+	lines := strings.Split(file_str, "\n")
 	str := ""
 	found := false
 	for _, line := range lines {
 		fields := strings.Fields(line)
-		if len(fields) == 2 {
-			if fields[0] == key {
-				str += key + " " + value + "\n"
-				found = true
-				break
-			} else { str += line + "\n"	}
-		}
+		if len(fields) == 2 && fields[0] == key {
+			str += key + " " + value + "\n"
+			found = true
+		} else { str += line + "\n"	}
 	}
 	if !found { str += key + " " + value + "\n" }
-	err = os.WriteFile(CFG_FILE, []byte(str), 0666); if err != nil { log.Fatal(err) }
+	file_write_str(CFG_FILE, str, true)
 }
 
-// get key value from config file
-// create file if it doesn't exist
+// get first matching key value from config file
+// return "" if file doesn't exist or no key match
 func cfg_get(key string) (string) {
-    _, err := os.Stat(CFG_FILE)
-    if errors.Is(err, os.ErrNotExist) {  // missing
-		cfg_set(key, strconv.Itoa(CFG_PORT))
-	}
-	bytes, err := os.ReadFile(CFG_FILE); if err != nil { log.Fatal(err) }
-	lines := (strings.Split(strings.TrimSpace(string(bytes)), "\n"))
+	if !path_exists_chk(CFG_FILE) { return "" }
+	key = strings.TrimSpace(key)
+	file_str := file_read_str(CFG_FILE)
+	lines := strings.Split(file_str, "\n")
 	for _, line := range lines {
 		fields := strings.Fields(line)
 		if len(fields) == 2 && fields[0] == key {

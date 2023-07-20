@@ -1,7 +1,3 @@
-//////////
-// TODO //
-//////////
-
 ///////////
 // BUILD //
 ///////////
@@ -18,7 +14,44 @@
 ////////////////
 // CHANGE LOG //
 ////////////////
-2023-06-00 : v7
+2023-06-21 : v8
+- Config file handling more robust.
+- Lots of path/file/ext edits.
+- dir_exists_chk() => path_exists_chk() with GO preferred syntax.
+
+2023-06-20 : v8
+- New SW load: 0x7bbb846b
+- Less cryptic serial port open error message (was: "no such file or directory").
+- Made the update _ALL_ directory non-relative.
+
+2023-06-18 : v8
+- Command update: 
+  - Now the default at startup.
+  - _ALL_ dir now relative to exe location.
+  - Option flag -d sets temp work dir.
+- Command ver reports librarian & SW ver, does CRC & old version checks.
+- A bunch of older SW versions now in d-lib_pkg.go.
+- Command help now has -v verbose flag.
+
+2023-06-17 : v8
+- Serial port idenfier is now system name rather than number from list.
+- Serial port no longer managed by main(), port open reads config file.
+- More verbose config file interaction.
+- SW_NEW, SW_OLD, DATE now in d-lib_pkg.go.
+- file_write() => file_write_str() with trim.
+- get_file_str() => file_read_str(), file_read_chk().
+- Funneled all file reads through file_read_str().
+- Funneled all file writes through file_write_str().
+- spi_wr() mode unused, removed.
+
+2023-06-16 : v8
+- Updated go to v1.20.4 and go.bug.st/serial to v1.5.0 (mac serial issues).
+- Rearranged PITCH UI knobs.
+- sp_wr_rd() issues ResetInputBuffer() & ResetOutputBuffer().
+- Command join safer, uses get_file_str().
+- get_file_str() safer, trims spaces at ends.
+
+2023-06-10 : v7 - RELEASED as 2023-05-24 - 
 - fmt.Scanln() stops consuming at first space, leaving stuff in the buffer.
 - Replaced with user_word() using bufio.NewScanner(os.Stdin) & .Scan().
 
@@ -165,10 +198,10 @@
 2022-12-04 : v3
 - Removed subcommand "view" slot default 0 (was confusing).
 
-2022-09-24 : v2
+2022-09-24 : v2 - RELEASED as 2022-10-06 - 
 - Commented lines in bank files now skipped over with btos.
 
-2022-09-17 : v1
+2022-09-17 : v1 - RELEASED - 
 - Moved help Notes from short to verbose help string.
 
 2022-09-16 : v1

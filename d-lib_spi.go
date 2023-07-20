@@ -52,7 +52,7 @@ func spi_wr_prot(sp serial.Port, prot_f bool) {
 }
 
 // write string to SPI port, optionally show activity
-func spi_wr(sp serial.Port, addr int, wr_str string, mode string, act_f bool) {
+func spi_wr(sp serial.Port, addr int, wr_str string, act_f bool) {
 	spi_wr_prot(sp, false)
 	split_strs := (strings.Split(strings.TrimSpace(wr_str), "\n"))
 	var chars int
@@ -80,16 +80,16 @@ func spi_wr(sp serial.Port, addr int, wr_str string, mode string, act_f bool) {
 // return spi bulk addresses
 func spi_bulk_addrs(mode string) (addr int, end int) {
 	switch mode {
-		case "pre" :
+		case ".pre" :
 			addr = EE_PRE_ADDR
 			end = EE_PRE_END
-		case "pro" :
+		case ".pro" :
 			addr = EE_PRO_ADDR
 			end = EE_PRO_END
-		case "spi" :
+		case ".spi" :
 			addr = EE_SPI_ADDR
 			end = EE_SPI_END
-		case "eeprom" :
+		case ".eeprom" :
 			addr = EE_START
 			end = EE_END
 		default :
@@ -127,19 +127,19 @@ func decruft_hcl(str_i string) (string) {
 }
 
 // get single slot data string
-func get_slot_str(port int, slot int, mode string) (string) {
+func get_slot_str(slot int, mode string) (string) {
 	addr := spi_slot_addr(slot, mode)
-	sp := sp_open(port)
+	sp := sp_open()
 	rx_str := spi_rd(sp, addr, addr + EE_PG_BYTES - 1, false)
 	sp.Close()
 	return rx_str
 }
 
 // get all slots data strings
-func get_slots_strs(port int) ([]string) {
-	addr, _ := spi_bulk_addrs("pre")
-	_, end := spi_bulk_addrs("pro")
-	sp := sp_open(port)
+func get_slots_strs() ([]string) {
+	addr, _ := spi_bulk_addrs(".pre")
+	_, end := spi_bulk_addrs(".pro")
+	sp := sp_open()
 	rx_str := spi_rd(sp, addr, end - 1, true)
 	sp.Close()
 	split_strs := strings.Split(rx_str, "\n")

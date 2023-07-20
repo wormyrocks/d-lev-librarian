@@ -6,12 +6,12 @@ Where: d-* = d-win (Windows); d-mac (Mac Intel); d-mm1 (Mac M1);
              d-lin (Linux Intel); d-arm (Linux ARM64); d-a32 (Linux ARM32)
 
 Commands & Flags:
-  update                                               interactive menu to do update
+  update                                               interactive update menu
   <command> -h                                         help with individual command flags
-  help                                                 extended librarian help with examples
+  help <-v>                                            librarian help with optional examples
   ports <-p port>                                      list ports / set port
   view  <-k|-s slot|-f file> <-pro>                    view knobs|slot|DLP file
-  match <-d dir> <-s|-d2 dir> <-g> <-pro>              match DLP files with slots|DLP files
+  match <-d dir> <-s|-d2 dir> <-hdr> <-g> <-pro>       match DLP files with slots|DLP files
   diff  <-f file> <-k|-s slot|-f2 file> <-pro>         compare DLP file to knobs|slot|DLP file2
   diff  <-s slot> <-k|-s2 slot> <-pro>                 compare slot to knobs|slot2
   ktof  <-f file> <-pro> <-y>                          download knobs to DLP file
@@ -42,7 +42,7 @@ Notes:
 - If provided, an incorrect file extension flags an error.
 - If the specified target directory doesn't exist it will be created.
 - The dump, pump, split, and join commands require a file extension to know what to do.
-- A <y|n> user prompt precedes most file overwrites (-y flag overrides prompt).
+- A <y|ENTER|q> user prompt precedes most file overwrites (-y flag overrides prompt).
 - The "knob" command page name matches first chars, and is case agnostic.
 - The "knob" command knob number [0:6]: 0 @ upper left, 1 @ upper right, etc.
 - The "btos" command uses the file path to locate all files.
@@ -61,12 +61,14 @@ Notes:
 - *** Requires USB dongle RX and TX wires to be connected together.
 
 Usage Examples: (e.g. Windows build)
-- Interactive update menu:
-    d-win update
-- Show librarian version & compact help:
+- Interactive update menu (temp directory "_WORK_"):
     d-win
-- Show librarian version & extended help:
-    d-win -h
+- Interactive update menu with temp directory "my_work_dir":
+    d-win update -d my_work_dir
+- Show librarian version & compact help:
+    d-win help
+- Show librarian version & verbose help:
+    d-win help -v
 - List all serial ports & current port:
     d-win ports
 - List all serial ports & set port to 5:

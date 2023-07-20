@@ -10,11 +10,26 @@ import (
 )
 
 const (
-	VERSION = "7"										// librarian version
+	LIB_VER = "8"										// current librarian version
+	SW_DATE = "2023-06-20"								// current sw date (for pre, pro, spi, eeprom file names)
+	SW_V8 = "7bbb846b"									// sw ver 2023-06-20
+	SW_V7 = "73c6c3d7"									// sw ver 2023-05-24
+	SW_V6 = "27c263bf"									// sw ver 2023-01-31
+	SW_V5 = "2d58f653"									// sw ver 2023-01-01
+	SW_V2 = "add46826"									// sw ver 2022-10-06
+	SW_OV129 = "7bc1bd55"								// sw ver 2022-07-05
+	SW_OV128 = "93152c8b"								// sw ver 2022-05-10
+	SW_OV127 = "d202d35"								// sw ver 2022-05-04
+	SW_OV126 = "af3f63c4"								// sw ver 2022-04-30
+	SW_OV125 = "67517a97"								// sw ver 2022-04-17
+	SW_OV124 = "5ba55477"								// sw ver 2022-03-17
+	SW_OV121 = "7b6a0484"								// sw ver 2022-01-01
+	SW_OV120 = "84f7f31c"								// sw ver 2021-12-18
+	SW_OV119 = "52fe7d"									// sw ver 2021-12-04
+	SW_OV115 = "240b1e68"								// sw ver 2021-10-31
 	//
 	SLOTS = 256											// pre + pro slots
 	SLOT_BYTES = 256									// bytes per slot
-
 	PRO_SLOTS = 6										// profile[0:5]
 	PRE_SLOTS = SLOTS - PRO_SLOTS						// preset[0:249]
 	//
@@ -47,8 +62,8 @@ const (
 	RX_BUF_BYTES = 512									// serial port rx buffer size
 	CHARS_PER_DOT = 4096								// chars for each activity dot printed
 	CFG_FILE = "d-lib.cfg"								// config file name
-	CFG_PORT = 0										// default port
-	//
+	WORK_DIR = "_WORK_"									// work scratch dir
+	PRESETS_DIR = "_ALL_"								// presets dir
 	CRC = "debb20e3"									// good CRC
 )
 
@@ -81,4 +96,19 @@ func ints_to_hexs(ints []int, bytes int) (string) {
 		hex_str += strconv.FormatInt(line_int, 16) + "\n"
 	}
 	return hex_str
+}
+
+// check for hexness
+func str_is_hex(str string) bool {
+	if len(str) == 0 { return false }
+	for _, ch := range str {
+		if !((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')) { return false }
+	}
+	return true
+}
+
+// return index of string in slice, else -1
+func str_exists(strs []string, str string) (int) {
+	for idx, entry := range strs { if str == entry { return idx } }
+	return -1
 }

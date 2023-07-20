@@ -20,7 +20,8 @@ type param_t struct {
 	pname string
 }
 
-var pro_params = []param_t {  // these are in preset / profile / slot order
+// these are in preset / profile / slot order
+var pro_params = []param_t {  
 	{0x01, "50Hz",    "s_p0_ds"},	// 0
 	{0x07, "Dith",    "s_p1_ds"},	// 1
 	{0x03, "P<>V",    "s_p2_ds"},	// 2
@@ -54,7 +55,8 @@ var pro_params = []param_t {  // these are in preset / profile / slot order
 	{0x7e, "Auto",    "p_p7_ds"},	// 30
 }
 
-var not_params = []param_t {  // these are in sequence
+// these are in sequence
+var not_params = []param_t {  
 	{0x7f, "    ", "menu_pg_ds"},	// 31 - NOT stored in *.dlp !  MENU_PG_IDX!
 	{0x7e, "load",   "ps_p0_ds"},	// 32 - NOT stored in *.dlp !
 	{0x7e, "stor",   "ps_p1_ds"},	// 33 - NOT stored in *.dlp !
@@ -62,7 +64,8 @@ var not_params = []param_t {  // these are in sequence
 	{0x05, "Stor",   "ps_p3_ds"},	// 35 - NOT stored in *.dlp !
 }
 
-var pre_params = []param_t {  // these are in preset / profile / slot order
+// these are in preset / profile / slot order
+var pre_params = []param_t {  
 	// oscillators:
 	{0x31, "osc ",  "o_p0_ds"},	// 0
 	{0x24, "odd ",  "o_p1_ds"},	// 1
@@ -171,13 +174,14 @@ var pre_params = []param_t {  // these are in preset / profile / slot order
 	{0xa3, "bank",  "b_p0_ds"},	// 96
 }
 
-var knob_pnames = []string {  // these are in UI page order (hcl rk & wk knob order)
+// these are in UI page order (hcl rk & wk knob order)
+var knob_pnames = []string {  
 	"v_p6_ds",  "v_p7_ds",  "v_p0_ds",  "p_p0_ds",  "ps_p1_ds", "b_p0_ds",  "ps_p0_ds", "menu_pg_ds",  // [0:7] D-LEV
 	"v_p6_ds",  "v_p8_ds",  "pp_p0_ds", "eq_p1_ds", "o_p0_ds",  "eq_p0_ds", "n_p0_ds",  "menu_pg_ds",  // [8:15] LEVELS
 	"pp_p6_ds", "pp_p3_ds", "pp_p0_ds", "pp_p4_ds", "pp_p1_ds", "pp_p5_ds", "pp_p2_ds", "menu_pg_ds",  // [16:23] PREVIEW : vmod, pmod, prev, mode, harm, tone, oct
 	"m_p1_ds",  "m_p4_ds",  "m_p6_ds",  "m_p5_ds",  "m_p2_ds",  "m_p0_ds",  "m_p3_ds",  "menu_pg_ds",  // [24:31] MIDI
 	"e_p0_ds",  "e_p3_ds",  "e_p1_ds",  "e_p2_ds",  "e_p4_ds",  "e_p5_ds",  "e_p6_ds",  "menu_pg_ds",  // [32:39] VOLUME
-	"pc_p4_ds", "pc_p3_ds", "pc_p1_ds", "pc_p2_ds", "pc_p0_ds", "e_p7_ds",  "t_p2_ds",  "menu_pg_ds",  // [40:47] PITCH
+	"pc_p4_ds", "pc_p0_ds", "pc_p1_ds", "e_p7_ds", "pc_p3_ds", "pc_p2_ds",  "t_p2_ds",  "menu_pg_ds",  // [40:47] PITCH
 	"n_p9_ds",  "n_p8_ds",  "n_p0_ds",  "n_p13_ds", "n_p10_ds", "n_p11_ds", "n_p14_ds", "menu_pg_ds",  // [48:55] NOISE
 	"n_p7_ds",  "n_p6_ds",  "n_p3_ds",  "n_p0_ds",  "n_p5_ds",  "n_p12_ds", "n_p4_ds",  "menu_pg_ds",  // [56:63] FLT_NOISE
 	"o_p4_ds",  "o_p3_ds",  "o_p2_ds",  "o_p15_ds", "o_p1_ds",  "o_p14_ds", "o_p5_ds",  "menu_pg_ds",  // [64:71] 0_OSC
@@ -194,6 +198,7 @@ var knob_pnames = []string {  // these are in UI page order (hcl rk & wk knob or
 	"s_p6_ds",  "p_p7_ds",  "s_p2_ds",  "s_p0_ds",  "ps_p3_ds",  "s_p3_ds", "ps_p2_ds", "menu_pg_ds",  // [152:159] SYSTEM
 }
 
+// these are in UI page order
 var page_names = []string {
 	"    D-LEV",
 	"   LEVELS",
@@ -688,11 +693,11 @@ func process_dlps(dir, dir2 string, pro, mono, update, robs, yes bool) {
 	dir = filepath.Clean(dir)
 	dir2 = filepath.Clean(dir2)
 	// prompt user
-	if !dir_exists_chk(dir) {
+	if !path_exists_chk(dir) {
 		log.Fatalln("> Directory", dir, "does not exist!") 
 	} else if dir == dir2 { 
 		if !user_prompt("Overwrite DLP files in SOURCE directory " + dir + "?", yes) { return }
-	} else if dir_exists_chk(dir2) { 
+	} else if path_exists_chk(dir2) { 
 		if !user_prompt("Overwrite DLP files in DESTINATION directory " + dir2 + "?", yes)  { return }
 	}
 	files, err := os.ReadDir(dir); if err != nil { log.Fatal(err) }
@@ -706,8 +711,8 @@ func process_dlps(dir, dir2 string, pro, mono, update, robs, yes bool) {
 			fmt.Println(dlp_cnt, "-", file_name)
 			dlp_cnt++
 			// read in
-			file_bytes, err := os.ReadFile(file_path); if err != nil { log.Fatal(err) }
-			pints := pints_signed(hexs_to_ints(string(file_bytes), 4), pro)
+			file_str := file_read_str(file_path)
+			pints := pints_signed(hexs_to_ints(file_str, 4), pro)
 			upd_f := false
 			zero_f := true
 			for _, param := range pints {
@@ -856,7 +861,7 @@ func process_dlps(dir, dir2 string, pro, mono, update, robs, yes bool) {
 				}
 			}
 			// write file
-			file_write(file_path2, []byte(ints_to_hexs(pints, 4)), true)
+			file_write_str(file_path2, ints_to_hexs(pints, 4), true)
 			if upd_f { 
 				upd_cnt++ 
 				fmt.Println("")
@@ -885,8 +890,8 @@ func find_dlp(dir string) {
 			file_name := file.Name()
 			file_path := filepath.Join(dir, file_name)
 			// read in
-			file_bytes, err := os.ReadFile(file_path); if err != nil { log.Fatal(err) }
-			pints := pints_signed(hexs_to_ints(string(file_bytes), 4), false)
+			file_str := file_read_str(file_path)
+			pints := pints_signed(hexs_to_ints(file_str, 4), false)
 
 /*			
 			if pints[95] != 0 {  // cvol
